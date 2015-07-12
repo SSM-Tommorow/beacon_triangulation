@@ -44,11 +44,11 @@ public class MainActivity extends Activity {
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == REQUEST_ENABLE_BT && resultCode == Activity.RESULT_CANCELED) {
-            //If the request to turn on bluetooth is denied, the app will be finished.
-            finish();
-            return;
+     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+            if (requestCode == REQUEST_ENABLE_BT && resultCode == Activity.RESULT_CANCELED) {
+                //If the request to turn on bluetooth is denied, the app will be finished.
+                finish();
+                return;
         }
         super.onActivityResult(requestCode, resultCode, data);
     }

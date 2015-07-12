@@ -55,6 +55,17 @@ public class RECORangingActivity extends RECOActivity implements RECORangingList
 				
 		//Set RECORangingListener (Required)
 		mRecoManager.setRangingListener(this);
+
+		/**
+		 * Bind RECOBeaconManager with RECOServiceConnectListener, which is implemented in RECOActivity
+		 * You SHOULD call this method to use monitoring/ranging methods successfully.
+		 * After binding, onServiceConenct() callback method is called.
+		 * So, please start monitoring/ranging AFTER the CALLBACK is called.
+		 *
+		 * RECOServiceConnectListener와 함께 RECOBeaconManager를 bind 합니다. RECOServiceConnectListener는 RECOActivity에 구현되어 있습니다.
+		 * monitoring 및 ranging 기능을 사용하기 위해서는, 이 메소드가 "반드시" 호출되어야 합니다.
+		 * bind후에, onServiceConnect() 콜백 메소드가 호출됩니다. 콜백 메소드 호출 이후 monitoring / ranging 작업을 수행하시기 바랍니다.
+		 */
 		mRecoManager.bind(this);
 	}
 	
@@ -104,8 +115,8 @@ public class RECORangingActivity extends RECOActivity implements RECORangingList
 		
 		/**
 		 * There is a known android bug that some android devices scan BLE devices only once. (link: http://code.google.com/p/android/issues/detail?id=65863)
-		 * To resolve the bug in our SDK, you can use setDiscontinuousScan() method of the RECOBeaconManager. 
-		 * This method is to set whether the device scans BLE devices continuously or discontinuously. 
+		 * To resolve the bug in our SDK, you can use setDiscontinuousScan() method of the RECOBeaconManager.
+		 * This method is to set whether the device scans BLE devices continuously or discontinuously.
 		 * The default is set as FALSE. Please set TRUE only for specific devices.
 		 * 
 		 * mRecoManager.setDiscontinuousScan(true);
