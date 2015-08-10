@@ -1,19 +1,16 @@
 package com.example.hyeonseob.beacontriangulation;
 
 import android.app.Activity;
-import android.app.ActivityManager;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothManager;
 import android.content.Context;
 import android.content.Intent;
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ToggleButton;
+
+import com.example.hyeonseob.beacontriangulation.RECO.RECORangingActivity;
 
 
 public class MainActivity extends Activity {
@@ -57,16 +54,6 @@ public class MainActivity extends Activity {
     protected void onResume() {
         Log.i("MainActivity", "onResume()");
         super.onResume();
-
-        if(this.isBackgroundMonitoringServiceRunning(this)) {
-            ToggleButton toggle = (ToggleButton)findViewById(R.id.backgroundMonitoringToggleButton);
-            toggle.setChecked(true);
-        }
-
-        if(this.isBackgroundRangingServiceRunning(this)) {
-            ToggleButton toggle = (ToggleButton)findViewById(R.id.backgroundRangingToggleButton);
-            toggle.setChecked(true);
-        }
     }
 
     @Override
@@ -75,58 +62,15 @@ public class MainActivity extends Activity {
         super.onDestroy();
     }
 
-    public void onMonitoringToggleButtonClicked(View v) {
-        ToggleButton toggle = (ToggleButton)v;
-        if(toggle.isChecked()) {
-            Log.i("MainActivity", "onMonitoringToggleButtonClicked off to on");
-            Intent intent = new Intent(this, RECOBackgroundMonitoringService.class);
-            startService(intent);
-        } else {
-            Log.i("MainActivity", "onMonitoringToggleButtonClicked on to off");
-            stopService(new Intent(this, RECOBackgroundMonitoringService.class));
-        }
-    }
-
-    public void onRangingToggleButtonClicked(View v) {
-        ToggleButton toggle = (ToggleButton)v;
-        if(toggle.isChecked()) {
-            Log.i("MainActivity", "onRangingToggleButtonClicked off to on");
-            Intent intent = new Intent(this, RECOBackgroundRangingService.class);
-            startService(intent);
-        } else {
-            Log.i("MainActivity", "onRangingToggleButtonClicked on to off");
-            stopService(new Intent(this, RECOBackgroundRangingService.class));
-        }
-    }
-
     public void onButtonClicked(View v) {
+        Log.i("button","button clicked!");
         Button btn = (Button)v;
-        if(btn.getId() == R.id.monitoringButton) {
-            final Intent intent = new Intent(this, RECOMonitoringActivity.class);
-            startActivity(intent);
-        } else {
+        if(btn.getId() == R.id.rangingButton) {
             final Intent intent = new Intent(this, RECORangingActivity.class);
             startActivity(intent);
+        } else if(btn.getId() == R.id.manageFingerprintButton){
+            final Intent intent = new Intent(this, ConfigurationActivity.class);
+            startActivity(intent);
         }
-    }
-
-    private boolean isBackgroundMonitoringServiceRunning(Context context) {
-        ActivityManager am = (ActivityManager)context.getSystemService(Context.ACTIVITY_SERVICE);
-        for(ActivityManager.RunningServiceInfo runningService : am.getRunningServices(Integer.MAX_VALUE)) {
-            if(RECOBackgroundMonitoringService.class.getName().equals(runningService.service.getClassName())) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private boolean isBackgroundRangingServiceRunning(Context context) {
-        ActivityManager am = (ActivityManager)context.getSystemService(Context.ACTIVITY_SERVICE);
-        for(ActivityManager.RunningServiceInfo runningService : am.getRunningServices(Integer.MAX_VALUE)) {
-            if(RECOBackgroundRangingService.class.getName().equals(runningService.service.getClassName())) {
-                return true;
-            }
-        }
-        return false;
     }
 }

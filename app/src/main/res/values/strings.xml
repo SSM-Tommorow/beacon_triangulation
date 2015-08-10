@@ -18,4 +18,8 @@
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
     <string name="title_activity_main_activity2">MainActivity2Activity</string>
+    <string name="title_activity_fingerprint_management">FingerprintManagementActivity</string>
+    <string name="title_activity_map">MapActivity</string>
+    <string name="title_activity_show_db">ShowDBActivity</string>
+    <string name="title_activity_ranging">RangingActivity</string>
 </resources>

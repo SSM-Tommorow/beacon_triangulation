@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.example.hyeonseob.beacontriangulation;
+package com.example.hyeonseob.beacontriangulation.RECO;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -34,6 +34,7 @@ import android.os.RemoteException;
 import android.util.Log;
 import android.widget.ListView;
 
+import com.example.hyeonseob.beacontriangulation.R;
 import com.perples.recosdk.RECOBeacon;
 import com.perples.recosdk.RECOBeaconRegion;
 import com.perples.recosdk.RECOBeaconRegionState;

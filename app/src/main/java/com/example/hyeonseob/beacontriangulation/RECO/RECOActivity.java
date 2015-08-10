@@ -21,13 +21,14 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.example.hyeonseob.beacontriangulation;
+package com.example.hyeonseob.beacontriangulation.RECO;
 
 import java.util.ArrayList;
 
 import android.app.Activity;
 import android.os.Bundle;
 
+import com.example.hyeonseob.beacontriangulation.MainActivity;
 import com.perples.recosdk.RECOBeaconManager;
 import com.perples.recosdk.RECOBeaconRegion;
 import com.perples.recosdk.RECOServiceConnectListener;
@@ -41,7 +42,7 @@ public abstract class RECOActivity extends Activity implements RECOServiceConnec
 		super.onCreate(savedInstanceState);
 
 		mRecoManager = RECOBeaconManager.getInstance(getApplicationContext(), MainActivity.SCAN_RECO_ONLY, MainActivity.ENABLE_BACKGROUND_RANGING_TIMEOUT);
-		mRecoManager.setScanPeriod(500);
+		mRecoManager.setScanPeriod(100);
 		mRegions = this.generateBeaconRegion();
 	}
 	

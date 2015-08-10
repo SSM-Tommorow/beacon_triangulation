@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="reco-sdk-android_0.2.3_JavaDoc">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/app/libs/reco-sdk-android_0.2.3_JavaDoc.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

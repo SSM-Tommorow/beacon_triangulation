@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.example.hyeonseob.beacontriangulation;
+package com.example.hyeonseob.beacontriangulation.RECO;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -37,21 +37,25 @@ import android.os.RemoteException;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
+import com.example.hyeonseob.beacontriangulation.MainActivity;
+import com.example.hyeonseob.beacontriangulation.R;
 import com.perples.recosdk.RECOBeacon;
 import com.perples.recosdk.RECOBeaconManager;
 import com.perples.recosdk.RECOBeaconRegion;
 import com.perples.recosdk.RECOBeaconRegionState;
 import com.perples.recosdk.RECOErrorCode;
 import com.perples.recosdk.RECOMonitoringListener;
+import com.perples.recosdk.RECORangingListener;
 import com.perples.recosdk.RECOServiceConnectListener;
 
 /**
- * RECOBackgroundMonitoringService is to monitor regions in the background.
+ * RECOBackgroundRangingService is to monitor regions and range regions when the device is inside in the BACKGROUND.
  */
-public class RECOBackgroundMonitoringService extends Service implements RECOMonitoringListener, RECOServiceConnectListener{
+public class RECOBackgroundRangingService extends Service implements RECOMonitoringListener, RECORangingListener, RECOServiceConnectListener {
 	
 	/**
-	 * We recommend 1 second for scanning, 10 seconds interval between scanning, and 60 seconds for region expiration time.
+	 * We recommend 1 second for scanning, 10 seconds interval between scanning, and 60 seconds for region expiration time. 
+	 * 1초 스캔, 10초 간격으로 스캔, 60초의 region expiration time은 당사 권장사항입니다.
 	 */
 	private long mScanDuration = 1*1000L;
 	private long mSleepDuration = 10*1000L;
@@ -60,16 +64,16 @@ public class RECOBackgroundMonitoringService extends Service implements RECOMoni
 	
 	private RECOBeaconManager mRecoManager;
 	private ArrayList<RECOBeaconRegion> mRegions;
-	
+
 	@Override
 	public void onCreate() {
-		Log.i("BackgroundMonitoring", "onCreate()");
+		Log.i("BackgroundRanging", "onCreate()");
 		super.onCreate();
 	}
-	
+
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
-		Log.i("BackgroundMonitoring", "onStartCommand()");
+		Log.i("BackgroundRanging", "onStartCommand");
 		/**
 		 * Create an instance of RECOBeaconManager (to set scanning target and ranging timeout in the background.)
 		 * If you want to scan only RECO, and do not set ranging timeout in the backgournd, create an instance: 
@@ -78,101 +82,137 @@ public class RECOBackgroundMonitoringService extends Service implements RECOMoni
 		 */
 		mRecoManager = RECOBeaconManager.getInstance(getApplicationContext(), MainActivity.SCAN_RECO_ONLY, MainActivity.ENABLE_BACKGROUND_RANGING_TIMEOUT);
 		this.bindRECOService();
-		//this should be set to run in the background.
-		//background에서 동작하기 위해서는 반드시 실행되어야 합니다.
 		return START_STICKY;
 	}
-	
+
 	@Override
 	public void onDestroy() {
-		Log.i("BackgroundMonitoring", "onDestroy()");
+		Log.i("BackgroundRanging", "onDestroy()");
 		this.tearDown();
 		super.onDestroy();
 	}
 
 	@Override
 	public void onTaskRemoved(Intent rootIntent) {
-		Log.i("BackgroundMonitoring", "onTaskRemoved()");
+		Log.i("BackgroundRanging", "onTaskRemoved()");
 		super.onTaskRemoved(rootIntent);
 	}
-	
+
 	private void bindRECOService() {
-		Log.i("BackgroundMonitoring", "bindRECOService()");
+		Log.i("BackgroundRanging", "bindRECOService()");
 		
 		mRegions = new ArrayList<RECOBeaconRegion>();
 		this.generateBeaconRegion();
 		
 		mRecoManager.setMonitoringListener(this);
+		mRecoManager.setRangingListener(this);
 		mRecoManager.bind(this);
 	}
 	
 	private void generateBeaconRegion() {
-		Log.i("BackgroundMonitoring", "generateBeaconRegion()");
+		Log.i("BackgroundRanging", "generateBeaconRegion()");
 		
 		RECOBeaconRegion recoRegion;
 		
 		recoRegion = new RECOBeaconRegion(MainActivity.RECO_UUID, "RECO Sample Region");
-		recoRegion.setRegionExpirationTimeMillis(mRegionExpirationTime);
+		recoRegion.setRegionExpirationTimeMillis(this.mRegionExpirationTime);
 		mRegions.add(recoRegion);
 	}
 	
 	private void startMonitoring() {
-		Log.i("BackgroundMonitoring", "startMonitoring()");
+		Log.i("BackgroundRanging", "startMonitoring()");
 		
-		mRecoManager.setScanPeriod(mScanDuration);
-		mRecoManager.setSleepPeriod(mSleepDuration);
+		mRecoManager.setScanPeriod(this.mScanDuration);
+		mRecoManager.setSleepPeriod(this.mSleepDuration);
 		
 		for(RECOBeaconRegion region : mRegions) {
 			try {
 				mRecoManager.startMonitoringForRegion(region);
 			} catch (RemoteException e) {
-				Log.e("BackgroundMonitoring", "RemoteException has occured while executing RECOManager.startMonitoringForRegion()");
+				Log.e("BackgroundRanging", "RemoteException has occured while executing RECOManager.startMonitoringForRegion()");
 				e.printStackTrace();
 			} catch (NullPointerException e) {
-				Log.e("BackgroundMonitoring", "NullPointerException has occured while executing RECOManager.startMonitoringForRegion()");
+				Log.e("BackgroundRanging", "NullPointerException has occured while executing RECOManager.startMonitoringForRegion()");
 				e.printStackTrace();
 			}
 		}
 	}
 	
 	private void stopMonitoring() {
-		Log.i("BackgroundMonitoring", "stopMonitoring()");
+		Log.i("BackgroundRanging", "stopMonitoring()");
 		
 		for(RECOBeaconRegion region : mRegions) {
 			try {
 				mRecoManager.stopMonitoringForRegion(region);
 			} catch (RemoteException e) {
-				Log.e("BackgroundMonitoring", "RemoteException has occured while executing RECOManager.stopMonitoringForRegion()");
+				Log.e("BackgroundRanging", "RemoteException has occured while executing RECOManager.stopMonitoringForRegion()");
 				e.printStackTrace();
 			} catch (NullPointerException e) {
-				Log.e("BackgroundMonitoring", "NullPointerException has occured while executing RECOManager.stopMonitoringForRegion()");
+				Log.e("BackgroundRanging", "NullPointerException has occured while executing RECOManager.stopMonitoringForRegion()");
 				e.printStackTrace();
 			}
 		}
 	}
 	
+	private void startRangingWithRegion(RECOBeaconRegion region) {
+		Log.i("BackgroundRanging", "startRangingWithRegion()");
+		
+		/**
+		 * There is a known android bug that some android devices scan BLE devices only once. (link: http://code.google.com/p/android/issues/detail?id=65863)
+		 * To resolve the bug in our SDK, you can use setDiscontinuousScan() method of the RECOBeaconManager. 
+		 * This method is to set whether the device scans BLE devices continuously or discontinuously. 
+		 * The default is set as FALSE. Please set TRUE only for specific devices.
+		 * 
+		 * mRecoManager.setDiscontinuousScan(true);
+		 */
+		
+		try {
+			mRecoManager.startRangingBeaconsInRegion(region);
+		} catch (RemoteException e) {
+			Log.e("BackgroundRanging", "RemoteException has occured while executing RECOManager.startRangingBeaconsInRegion()");
+			e.printStackTrace();
+		} catch (NullPointerException e) {
+			Log.e("BackgroundRanging", "NullPointerException has occured while executing RECOManager.startRangingBeaconsInRegion()");
+			e.printStackTrace();
+		}
+	}
+	
+	private void stopRangingWithRegion(RECOBeaconRegion region) {
+		Log.i("BackgroundRanging", "stopRangingWithRegion()");
+		
+		try {
+			mRecoManager.stopRangingBeaconsInRegion(region);
+		} catch (RemoteException e) {
+			Log.e("BackgroundRanging", "RemoteException has occured while executing RECOManager.stopRangingBeaconsInRegion()");
+			e.printStackTrace();
+		} catch (NullPointerException e) {
+			Log.e("BackgroundRanging", "NullPointerException has occured while executing RECOManager.stopRangingBeaconsInRegion()");
+			e.printStackTrace();
+		}
+	}
+	
 	private void tearDown() {
-		Log.i("BackgroundMonitoring", "tearDown()");
+		Log.i("BackgroundRanging", "tearDown()");
 		this.stopMonitoring();
 		
 		try {
 			mRecoManager.unbind();
 		} catch (RemoteException e) {
-			Log.e("BackgroundMonitoring", "RemoteException has occured while executing unbind()");
+			Log.e("BackgroundRanging", "RemoteException has occured while executing unbind()");
 			e.printStackTrace();
 		}
 	}
 	
 	@Override
 	public void onServiceConnect() {
-		Log.i("BackgroundMonitoring", "onServiceConnect()");
+		Log.i("BackgroundRanging", "onServiceConnect()");
 		this.startMonitoring();
 		//Write the code when RECOBeaconManager is bound to RECOBeaconService
 	}
 
 	@Override
 	public void didDetermineStateForRegion(RECOBeaconRegionState state, RECOBeaconRegion region) {
-		Log.i("BackgroundMonitoring", "didDetermineStateForRegion()");
+		Log.i("BackgroundRanging", "didDetermineStateForRegion()");
 		//Write the code when the state of the monitored region is changed
 	}
 
@@ -184,11 +224,14 @@ public class RECOBackgroundMonitoringService extends Service implements RECOMoni
 		 */
 		
 		//Get the region and found beacon list in the entered region
-		Log.i("BackgroundMonitoring", "didEnterRegion() - " + region.getUniqueIdentifier());
+		Log.i("BackgroundRanging", "didEnterRegion() - " + region.getUniqueIdentifier());
 		this.popupNotification("Inside of " + region.getUniqueIdentifier());
 		//Write the code when the device is enter the region
+		
+		this.startRangingWithRegion(region); //start ranging to get beacons inside of the region
+		//from now, stop ranging after 10 seconds if the device is not exited
 	}
-	
+
 	@Override
 	public void didExitRegion(RECOBeaconRegion region) {
 		/**
@@ -196,19 +239,27 @@ public class RECOBackgroundMonitoringService extends Service implements RECOMoni
 		 * Please check the state of the region using didDetermineStateForRegion() callback method.
 		 */
 		
-		Log.i("BackgroundMonitoring", "didExitRegion() - " + region.getUniqueIdentifier());
+		Log.i("BackgroundRanging", "didExitRegion() - " + region.getUniqueIdentifier());
 		this.popupNotification("Outside of " + region.getUniqueIdentifier());
 		//Write the code when the device is exit the region
+		
+		this.stopRangingWithRegion(region); //stop ranging because the device is outside of the region from now
 	}
 
 	@Override
 	public void didStartMonitoringForRegion(RECOBeaconRegion region) {
-		Log.i("BackgroundMonitoring", "didStartMonitoringForRegion() - " + region.getUniqueIdentifier());
+		Log.i("BackgroundRanging", "didStartMonitoringForRegion() - " + region.getUniqueIdentifier());
 		//Write the code when starting monitoring the region is started successfully
 	}
 
+	@Override
+	public void didRangeBeaconsInRegion(Collection<RECOBeacon> beacons, RECOBeaconRegion region) {
+		Log.i("BackgroundRanging", "didRangeBeaconsInRegion() - " + region.getUniqueIdentifier() + " with " + beacons.size() + " beacons");
+		//Write the code when the beacons inside of the region is received
+	}
+	
 	private void popupNotification(String msg) {
-		Log.i("BackgroundMonitoring", "popupNotification()");
+		Log.i("BackgroundRanging", "popupNotification()");
 		String currentTime = new SimpleDateFormat("HH:mm:ss", Locale.KOREA).format(new Date());
 		NotificationManager nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 		NotificationCompat.Builder builder = new NotificationCompat.Builder(this).setSmallIcon(R.drawable.ic_launcher)
@@ -220,10 +271,10 @@ public class RECOBackgroundMonitoringService extends Service implements RECOMoni
 		nm.notify(mNotificationID, builder.build());
 		mNotificationID = (mNotificationID - 1) % 1000 + 9000;
 	}
-
+	
 	@Override
 	public IBinder onBind(Intent intent) {
-		// This method is not used
+		//This method is not used
 		return null;
 	}
 	
@@ -240,5 +291,11 @@ public class RECOBackgroundMonitoringService extends Service implements RECOMoni
 		//See the RECOErrorCode in the documents.
 		return;
 	}
-
+	
+	@Override
+	public void rangingBeaconsDidFailForRegion(RECOBeaconRegion region, RECOErrorCode errorCode) {
+		//Write the code when the RECOBeaconService is failed to range beacons in the region.
+		//See the RECOErrorCode in the documents.
+		return;
+	}
 }

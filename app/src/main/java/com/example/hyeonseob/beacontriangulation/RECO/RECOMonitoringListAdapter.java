@@ -1,5 +1,5 @@
 
-package com.example.hyeonseob.beacontriangulation;
+package com.example.hyeonseob.beacontriangulation.RECO;
 /**
  * The MIT License (MIT)
  * 
@@ -34,6 +34,7 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
 
+import com.example.hyeonseob.beacontriangulation.R;
 import com.perples.recosdk.RECOBeaconRegion;
 import com.perples.recosdk.RECOBeaconRegionState;
 

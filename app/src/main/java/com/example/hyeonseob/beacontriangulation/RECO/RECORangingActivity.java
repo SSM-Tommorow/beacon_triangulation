@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.example.hyeonseob.beacontriangulation;
+package com.example.hyeonseob.beacontriangulation.RECO;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -31,6 +31,8 @@ import android.os.RemoteException;
 import android.util.Log;
 import android.widget.ListView;
 
+import com.example.hyeonseob.beacontriangulation.MainActivity;
+import com.example.hyeonseob.beacontriangulation.R;
 import com.perples.recosdk.RECOBeacon;
 import com.perples.recosdk.RECOBeaconRegion;
 import com.perples.recosdk.RECOErrorCode;
@@ -109,7 +111,8 @@ public class RECORangingActivity extends RECOActivity implements RECORangingList
 		mRangingListAdapter.notifyDataSetChanged();
 		//Write the code when the beacons in the region is received
 	}
-	
+
+
 	@Override
 	protected void start(ArrayList<RECOBeaconRegion> regions) {
 		
@@ -121,7 +124,8 @@ public class RECORangingActivity extends RECOActivity implements RECORangingList
 		 * 
 		 * mRecoManager.setDiscontinuousScan(true);
 		 */
-		
+
+		mRecoManager.setDiscontinuousScan(true);
 		for(RECOBeaconRegion region : regions) {
 			try {
 				mRecoManager.startRangingBeaconsInRegion(region);
