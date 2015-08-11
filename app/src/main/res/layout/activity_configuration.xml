@@ -29,8 +29,8 @@
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Measure RSS"
-        android:id="@+id/measureRSSButton"
+        android:text="Map Update"
+        android:id="@+id/mapUpdateButton"
         android:onClick="onButtonClicked"
         android:layout_below="@+id/showMapButton"
         android:layout_centerHorizontal="true"

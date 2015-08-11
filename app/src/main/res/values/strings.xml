@@ -22,4 +22,5 @@
     <string name="title_activity_map">MapActivity</string>
     <string name="title_activity_show_db">ShowDBActivity</string>
     <string name="title_activity_ranging">RangingActivity</string>
+    <string name="title_activity_map_update">MapUpdateActivity</string>
 </resources>
