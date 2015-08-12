@@ -79,6 +79,8 @@ public class MapUpdateActivity extends Activity {
                 @Override
                 public void onClick(View v) {
                     mIDTextView.setText("ID: "+(v.getId()+1));
+                    mXTextView.setText("X: "+(v.getId()%14)+", ");
+                    mYTextView.setText("Y: "+(v.getId()/14+1)+", ");
 
                     if(v.getId() != checkedButton)
                     {
