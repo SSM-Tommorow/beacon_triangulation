@@ -23,12 +23,13 @@ public class MapUpdateActivity extends Activity {
     private RelativeLayout mapLayout;
     private ImageView mapImageView;
     private Vector<ImageView> buttonView;
-    private TextView mXTextView, mYTextView, mIDTextView, mIntervalTextView, mRSSITextView;
+    private TextView mXTextView, mYTextView, mIDTextView, mIntervalTextView, mRSSITextView, mStatusTextView;
 
     private Drawable redButton;
     private Drawable grayButton;
 
     private TransCoordinate mTransCoord;
+    private DBManager mDBManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,8 +45,10 @@ public class MapUpdateActivity extends Activity {
         mIDTextView = (TextView) findViewById(R.id.idTextView);
         mIntervalTextView = (TextView) findViewById(R.id.intervalTextView);
         mRSSITextView = (TextView) findViewById(R.id.RSSITextView);
+        mStatusTextView = (TextView) findViewById(R.id.statusTextView);
 
         mTransCoord = new TransCoordinate();
+        mDBManager = new DBManager();
     }
 
     @Override
@@ -139,21 +142,32 @@ public class MapUpdateActivity extends Activity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        double[] result;
+        int i,j;
+        double[] result = null;
         if(resultCode == RESULT_OK && requestCode == 1)
         {
             result = data.getDoubleArrayExtra("rssi_avg");
             mIntervalTextView.setText("Interval: "+(int)result[0]);
 
             StringBuffer sb = new StringBuffer();
-            for(int i=1; i<5; i++) {
-                sb.append("\n");
+            for(i=0; i<ConfidenceIntervalActivity.WINDOW_SIZE; i++) {
+                sb.append("count :");
                 sb.append(i);
-                sb.append(":");
-                sb.append(result[i]);
+                sb.append(",   ");
+                for(j=1; j<=4; j++)
+                {
+                    sb.append(j);
+                    sb.append(":");
+                    sb.append(result[i*4+j]);
+                    sb.append(", ");
+                }
+                sb.append("\n");
             }
             mRSSITextView.setText(sb.toString());
         }
+
+        mDBManager.setTextView(mStatusTextView);
+        mDBManager.insertFingerprint(result, checkedButton+1, (int)result[0]);
     }
 
     @Override

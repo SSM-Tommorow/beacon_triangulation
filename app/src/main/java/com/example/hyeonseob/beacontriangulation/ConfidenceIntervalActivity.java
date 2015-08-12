@@ -17,7 +17,7 @@ import java.util.Collection;
 import java.util.Vector;
 
 public class ConfidenceIntervalActivity extends RECOActivity implements RECORangingListener {
-    private final static int WINDOW_SIZE = 10, RSSI_TRHESHOLD = -99999;
+    final static int WINDOW_SIZE = 100, RSSI_TRHESHOLD = -99999;
     private TextView mIntervalTextView;
     private TextView mDetectedBeaconTextView;
     private TextView mCountTextView;
@@ -25,6 +25,7 @@ public class ConfidenceIntervalActivity extends RECOActivity implements RECORang
     private int mNearestBeaconMajor, mFirstNearestBeaconMajor;
     private int mCount;
     private double[] mRSSIAvg, mRSSI;
+    private Vector<Double> mRSSIVect;
 
     private StringBuffer mInterval;
     private StringBuffer mResult;
@@ -40,6 +41,8 @@ public class ConfidenceIntervalActivity extends RECOActivity implements RECORang
         mRSSI = new double[5];
         mRSSIAvg = new double[5];
         mFirstNearestBeaconMajor = 0;
+        mRSSIVect = new Vector<>();
+        mRSSIVect.add(0.0);
 
         mIntervalTextView = (TextView) findViewById(R.id.intervalTextView);
         mDetectedBeaconTextView = (TextView) findViewById(R.id.detectedBeaconTextView);
@@ -83,7 +86,7 @@ public class ConfidenceIntervalActivity extends RECOActivity implements RECORang
             mInterval.append("Interval: ").append(mNearestBeaconMajor);
 
             for(int i=1; i<5; i++)
-                mRSSIAvg[i] += mRSSI[i];
+                mRSSIVect.add(mRSSI[i]);
             mCount++;
         }
         else
@@ -93,14 +96,16 @@ public class ConfidenceIntervalActivity extends RECOActivity implements RECORang
         mDetectedBeaconTextView.setText(mResult.toString());
         mCountTextView.setText("Count: "+ mCount);
 
-        if(mCount > WINDOW_SIZE)
+        if(mCount >= WINDOW_SIZE)
         {
-            for(int i=1; i<5; i++)
-                mRSSIAvg[i] /= mCount;
-            mRSSIAvg[0] = mFirstNearestBeaconMajor;
+            double[] result = new double[mRSSIVect.size()];
+            for(int i=1; i<mRSSIVect.size(); i++)
+                result[i] = mRSSIVect.elementAt(i);
+            result[0] = mFirstNearestBeaconMajor;
 
             Intent intent = new Intent();
-            intent.putExtra("rssi_avg",mRSSIAvg);
+            intent.putExtra("rssi_avg",result);
+
             setResult(RESULT_OK, intent);
             finish();
         }
