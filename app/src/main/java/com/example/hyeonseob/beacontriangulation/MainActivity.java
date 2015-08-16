@@ -65,9 +65,8 @@ public class MainActivity extends Activity {
     public void onButtonClicked(View v) {
         Log.i("button","button clicked!");
         Button btn = (Button)v;
-        if(btn.getId() == R.id.rangingButton) {
-            final Intent intent = new Intent(this, RECORangingActivity.class);
-            startActivity(intent);
+        if(btn.getId() == R.id.startNavigatingButton) {
+
         } else if(btn.getId() == R.id.manageFingerprintButton){
             final Intent intent = new Intent(this, ConfigurationActivity.class);
             startActivity(intent);

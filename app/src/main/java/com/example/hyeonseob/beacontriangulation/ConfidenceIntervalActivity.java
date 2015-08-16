@@ -17,7 +17,7 @@ import java.util.Collection;
 import java.util.Vector;
 
 public class ConfidenceIntervalActivity extends RECOActivity implements RECORangingListener {
-    final static int WINDOW_SIZE = 100, RSSI_TRHESHOLD = -99999;
+    final static int WINDOW_SIZE = 10, RSSI_TRHESHOLD = -99999;
     private TextView mIntervalTextView;
     private TextView mDetectedBeaconTextView;
     private TextView mCountTextView;

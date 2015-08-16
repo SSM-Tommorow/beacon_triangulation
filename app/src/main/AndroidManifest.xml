@@ -41,10 +41,6 @@
             android:label="@string/title_activity_map" >
         </activity>
         <activity
-            android:name=".ShowDBActivity"
-            android:label="@string/title_activity_show_db" >
-        </activity>
-        <activity
             android:name=".ConfidenceIntervalActivity"
             android:label="@string/title_activity_ranging" >
         </activity>

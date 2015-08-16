@@ -14,9 +14,13 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.Vector;
 
-public class MapUpdateActivity extends Activity {
+public class MapUpdateActivity extends Activity implements OnTaskCompleted{
     private int mapHeight, mapWidth, mBlockSize;
     private int checkedButton = -1;
 
@@ -27,6 +31,7 @@ public class MapUpdateActivity extends Activity {
 
     private Drawable redButton;
     private Drawable grayButton;
+    private Drawable blueButton;
 
     private TransCoordinate mTransCoord;
     private DBManager mDBManager;
@@ -38,6 +43,7 @@ public class MapUpdateActivity extends Activity {
 
         redButton = getResources().getDrawable(R.drawable.red_button);
         grayButton = getResources().getDrawable(R.drawable.gray_button);
+        blueButton = getResources().getDrawable(R.drawable.blue_button);
         mapLayout = (RelativeLayout) findViewById(R.id.mapLayout);
         mapImageView = (ImageView) findViewById(R.id.mapImageView);
         mXTextView = (TextView) findViewById(R.id.xTextView);
@@ -66,6 +72,27 @@ public class MapUpdateActivity extends Activity {
         new BackgroundTask().execute();
     }
 
+    @Override
+    public void onTaskCompleted(JSONObject jsonObj) {
+        JSONObject jsonArr;
+        ImageView imageView;
+        int buttonID;
+        try {
+            for(int i=0; i<5; i++)
+            {
+                jsonArr = (JSONObject)jsonObj.get(""+i);
+                buttonID = Integer.parseInt(jsonArr.getString("coordinate_id"));
+                imageView = buttonView.get(buttonID - 1);
+
+                Log.i("MAP","button ID: "+buttonID+", alpha: "+imageView.getAlpha());
+                imageView.setImageAlpha(imageView.getImageAlpha()+(5-i)*20);
+                imageView.setImageDrawable(blueButton);
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
     class BackgroundTask extends AsyncTask {
         @Override
         protected Object doInBackground(Object[] params) {
@@ -79,7 +106,7 @@ public class MapUpdateActivity extends Activity {
                 @Override
                 public void onClick(View v) {
                     mIDTextView.setText("ID: "+(v.getId()+1));
-                    mXTextView.setText("X: "+(v.getId()%14)+", ");
+                    mXTextView.setText("X: "+(v.getId()%14+1)+", ");
                     mYTextView.setText("Y: "+(v.getId()/14+1)+", ");
 
                     if(v.getId() != checkedButton)
@@ -132,11 +159,20 @@ public class MapUpdateActivity extends Activity {
     // Start Measurement Button
     public void onButtonClicked(View v) {
         Button btn = (Button)v;
-        if(btn.getId() == R.id.startMeasurementButton) {
+        if(btn.getId() == R.id.updateRSSIButton) {
             Log.i("MAP","start measurement!");
 
             final Intent intent = new Intent(MapUpdateActivity.this, ConfidenceIntervalActivity.class);
             startActivityForResult(intent, 1);
+        }
+        else if(btn.getId() == R.id.estimationButton) {
+            Log.i("MAP","start estimation");
+
+            final Intent intent = new Intent(MapUpdateActivity.this, ConfidenceIntervalActivity.class);
+            startActivityForResult(intent, 2);
+        }
+        else if(btn.getId() == R.id.showRSSIButton) {
+            Log.i("MAP","start searching RSSI");
         }
     }
 
@@ -146,7 +182,7 @@ public class MapUpdateActivity extends Activity {
 
         int i,j;
         double[] result = null;
-        if(resultCode == RESULT_OK && requestCode == 1)
+        if(resultCode == RESULT_OK)
         {
             result = data.getDoubleArrayExtra("rssi_avg");
             mIntervalTextView.setText("Interval: "+(int)result[0]);
@@ -166,10 +202,34 @@ public class MapUpdateActivity extends Activity {
                 sb.append("\n");
             }
             mRSSITextView.setText(sb.toString());
-        }
+            mDBManager.setTextView(mStatusTextView);
 
-        mDBManager.setTextView(mStatusTextView);
-        mDBManager.insertFingerprint(result, checkedButton+1, (int)result[0]);
+            if(requestCode == 1)
+            {
+
+                mDBManager.insertFingerprint(result, checkedButton+1, (int)result[0]);
+            }
+            else if(requestCode == 2)
+            {
+                for(ImageView b : buttonView)
+                {
+                    b.setImageDrawable(grayButton);
+                    b.setImageAlpha(50);
+                }
+
+                for(i=0; i<10; i++)
+                {
+                    double[] temp = {0,0,0,0,0};
+                    temp[0] = result[0];
+                    temp[1] = result[i*4+1];
+                    temp[2] = result[i*4+2];
+                    temp[3] = result[i*4+3];
+                    temp[4] = result[i*4+4];
+                    Log.i("MAP","searching: "+temp[0]+","+temp[1]+","+temp[2]+","+temp[3]+","+temp[4]);
+                    mDBManager.getEstimatedLocation(temp, this);
+                }
+            }
+        }
     }
 
     @Override
@@ -178,7 +238,6 @@ public class MapUpdateActivity extends Activity {
         getMenuInflater().inflate(R.menu.menu_map_update, menu);
         return true;
     }
-
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle action bar item clicks here. The action bar will

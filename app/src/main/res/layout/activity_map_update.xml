@@ -20,16 +20,38 @@
         android:orientation="horizontal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Show RSSI"
+            android:id="@+id/showRSSIButton"
+            android:onClick="onButtonClicked"/>
 
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Start measurement"
-            android:id="@+id/startMeasurementButton"
+            android:text="Update RSSI"
+            android:id="@+id/updateRSSIButton"
+            android:onClick="onButtonClicked"/>
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Estimation"
+            android:id="@+id/estimationButton"
             android:onClick="onButtonClicked"/>
 
     </LinearLayout>
-
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Status:"
+            android:id="@+id/statusTextView" />
+    </LinearLayout>
     <LinearLayout
         android:orientation="horizontal"
         android:layout_width="match_parent"
@@ -75,15 +97,6 @@
             android:id="@+id/RSSITextView" />
     </LinearLayout>
 
-    <LinearLayout
-        android:orientation="horizontal"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text=""
-            android:id="@+id/statusTextView" />
-    </LinearLayout>
+
 
 </LinearLayout>
