@@ -31,7 +31,7 @@ import android.os.RemoteException;
 import android.util.Log;
 import android.widget.ListView;
 
-import com.example.hyeonseob.beacontriangulation.MainActivity;
+import com.example.hyeonseob.beacontriangulation.Activity.MainActivity;
 import com.example.hyeonseob.beacontriangulation.R;
 import com.perples.recosdk.RECOBeacon;
 import com.perples.recosdk.RECOBeaconRegion;
@@ -125,7 +125,6 @@ public class RECORangingActivity extends RECOActivity implements RECORangingList
 		 * mRecoManager.setDiscontinuousScan(true);
 		 */
 
-		mRecoManager.setDiscontinuousScan(true);
 		for(RECOBeaconRegion region : regions) {
 			try {
 				mRecoManager.startRangingBeaconsInRegion(region);

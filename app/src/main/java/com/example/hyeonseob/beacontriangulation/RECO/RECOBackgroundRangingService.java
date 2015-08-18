@@ -37,7 +37,7 @@ import android.os.RemoteException;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
-import com.example.hyeonseob.beacontriangulation.MainActivity;
+import com.example.hyeonseob.beacontriangulation.Activity.MainActivity;
 import com.example.hyeonseob.beacontriangulation.R;
 import com.perples.recosdk.RECOBeacon;
 import com.perples.recosdk.RECOBeaconManager;

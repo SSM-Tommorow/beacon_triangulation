@@ -5,14 +5,14 @@
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
     android:paddingBottom="@dimen/activity_vertical_margin"
-    tools:context="com.example.hyeonseob.beacontriangulation.ConfidenceIntervalActivity">
+    tools:context="com.example.hyeonseob.beacontriangulation.Activity.ConfidenceIntervalActivity">
 
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Preparing..."
-        android:id="@+id/intervalTextView" />
+        android:id="@+id/countTextView" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -20,9 +20,5 @@
         android:text=""
         android:id="@+id/detectedBeaconTextView" />
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text=""
-        android:id="@+id/countTextView" />
+
 </LinearLayout>

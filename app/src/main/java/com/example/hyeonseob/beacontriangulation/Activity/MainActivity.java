@@ -1,4 +1,4 @@
-package com.example.hyeonseob.beacontriangulation;
+package com.example.hyeonseob.beacontriangulation.Activity;
 
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
@@ -10,11 +10,10 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 
-import com.example.hyeonseob.beacontriangulation.RECO.RECORangingActivity;
+import com.example.hyeonseob.beacontriangulation.R;
 
 
 public class MainActivity extends Activity {
-    //This is a default proximity uuid of the RECO
     public static final String RECO_UUID = "24DDF411-8CF1-440C-87CD-E368DAF9C93E";
     public static final boolean SCAN_RECO_ONLY = true;
     public static final boolean ENABLE_BACKGROUND_RANGING_TIMEOUT = true;

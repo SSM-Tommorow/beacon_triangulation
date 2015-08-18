@@ -1,4 +1,4 @@
-package com.example.hyeonseob.beacontriangulation;
+package com.example.hyeonseob.beacontriangulation.Activity;
 
 import android.content.Intent;
 import android.os.RemoteException;
@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.TextView;
 
+import com.example.hyeonseob.beacontriangulation.R;
 import com.example.hyeonseob.beacontriangulation.RECO.RECOActivity;
 import com.perples.recosdk.RECOBeacon;
 import com.perples.recosdk.RECOBeaconRegion;
@@ -17,17 +18,13 @@ import java.util.Collection;
 import java.util.Vector;
 
 public class ConfidenceIntervalActivity extends RECOActivity implements RECORangingListener {
-    final static int WINDOW_SIZE = 10, RSSI_TRHESHOLD = -99999;
-    private TextView mIntervalTextView;
+    public final static int WINDOW_SIZE = 20;
     private TextView mDetectedBeaconTextView;
     private TextView mCountTextView;
 
-    private int mNearestBeaconMajor, mFirstNearestBeaconMajor;
+    private int[][] mBeaconFlag = {{0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}};
     private int mCount;
-    private double[] mRSSIAvg, mRSSI;
-    private Vector<Double> mRSSIVect;
-
-    private StringBuffer mInterval;
+    private Vector<Integer> mRSSIVect;
     private StringBuffer mResult;
 
     @Override
@@ -35,16 +32,10 @@ public class ConfidenceIntervalActivity extends RECOActivity implements RECORang
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_confidence_interval);
 
-        mInterval = new StringBuffer();
         mResult = new StringBuffer();
         mCount = 0;
-        mRSSI = new double[5];
-        mRSSIAvg = new double[5];
-        mFirstNearestBeaconMajor = 0;
         mRSSIVect = new Vector<>();
-        mRSSIVect.add(0.0);
 
-        mIntervalTextView = (TextView) findViewById(R.id.intervalTextView);
         mDetectedBeaconTextView = (TextView) findViewById(R.id.detectedBeaconTextView);
         mCountTextView = (TextView) findViewById(R.id.countTextView);
 
@@ -55,56 +46,65 @@ public class ConfidenceIntervalActivity extends RECOActivity implements RECORang
     @Override
     public void didRangeBeaconsInRegion(Collection<RECOBeacon> collection, RECOBeaconRegion recoBeaconRegion) {
         Log.i("RECORangingActivity", "didRangeBeaconsInRegion() region: " + recoBeaconRegion.getUniqueIdentifier() + ", number of beacons ranged: " + collection.size());
-
-        int count=0;
-        mInterval.setLength(0);
+        int[] mRSSI = new int[15];
+        int[][] tempFlag = {{0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}};
+        int count=0, major, minor, i, j;
         mResult.setLength(0);
-
-        mNearestBeaconMajor = collection.iterator().next().getMajor();
-        if(mFirstNearestBeaconMajor == 0)
-            mFirstNearestBeaconMajor = mNearestBeaconMajor;
-        else if(mFirstNearestBeaconMajor != mNearestBeaconMajor)
-            return;
 
         for(RECOBeacon beacon : collection)
         {
-            if(beacon.getMajor() == mNearestBeaconMajor && beacon.getRssi() > RSSI_TRHESHOLD) {
+            major = beacon.getMajor()-1;
+            minor = beacon.getMinor()-1;
+            tempFlag[major][minor] = 1;
+
+            if(mBeaconFlag[major][minor] == 0)
+            {
+                mBeaconFlag[major][minor] = 1;
+                continue;
+            }
+            else {
+                mBeaconFlag[major][minor] = 2;
                 count++;
                 mResult.append("Major: ");
-                mResult.append(beacon.getMajor());
+                mResult.append(major+1);
                 mResult.append(", Minor: ");
-                mResult.append(beacon.getMinor());
+                mResult.append(minor+1);
                 mResult.append(", RSSI: ");
                 mResult.append(beacon.getRssi());
                 mResult.append("\n");
 
-                mRSSI[beacon.getMinor()] = beacon.getRssi();
+                mRSSI[major*3 + minor + 1] = beacon.getRssi();
             }
         }
 
-        if((mNearestBeaconMajor == 2 && count > 2) || count > 3) {
-            mInterval.append("Interval: ").append(mNearestBeaconMajor);
+        String temp = new String();
+        for(i=0; i<5; i++) {
+            for (j = 0; j < 3; j++) {
+                temp += "(" + i + "," + j + ") : " + mBeaconFlag[i][j] + ", ";
+                if (tempFlag[i][j] == 0)
+                    mBeaconFlag[i][j] = 0;
+            }
+        }
+        Log.i("MAP","flag: "+temp+", count: "+count);
 
-            for(int i=1; i<5; i++)
+        if(count > 0) {
+            for (i = 0; i < 15; i++)
                 mRSSIVect.add(mRSSI[i]);
             mCount++;
         }
-        else
-            mInterval.append("Interval: Out of confidence intervals");
 
-        mIntervalTextView.setText(mInterval.toString());
         mDetectedBeaconTextView.setText(mResult.toString());
         mCountTextView.setText("Count: "+ mCount);
 
         if(mCount >= WINDOW_SIZE)
         {
-            double[] result = new double[mRSSIVect.size()];
-            for(int i=1; i<mRSSIVect.size(); i++)
+            int[] result = new int[mRSSIVect.size()];
+            for(i=1; i<mRSSIVect.size(); i++)
                 result[i] = mRSSIVect.elementAt(i);
-            result[0] = mFirstNearestBeaconMajor;
+            result[0] = 0;
 
             Intent intent = new Intent();
-            intent.putExtra("rssi_avg",result);
+            intent.putExtra("rssi_list",result);
 
             setResult(RESULT_OK, intent);
             finish();

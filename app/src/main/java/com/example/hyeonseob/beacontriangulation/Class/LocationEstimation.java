@@ -1,6 +1,4 @@
-package com.example.hyeonseob.beacontriangulation;
-
-import android.graphics.Point;
+package com.example.hyeonseob.beacontriangulation.Class;
 
 import java.util.Vector;
 

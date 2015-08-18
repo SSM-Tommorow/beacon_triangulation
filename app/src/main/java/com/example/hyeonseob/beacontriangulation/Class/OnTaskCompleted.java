@@ -1,4 +1,4 @@
-package com.example.hyeonseob.beacontriangulation;
+package com.example.hyeonseob.beacontriangulation.Class;
 
 import org.json.JSONObject;
 

@@ -1,4 +1,4 @@
-package com.example.hyeonseob.beacontriangulation;
+package com.example.hyeonseob.beacontriangulation.Activity;
 
 import android.app.Activity;
 import android.graphics.drawable.Drawable;
@@ -8,6 +8,8 @@ import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
+
+import com.example.hyeonseob.beacontriangulation.R;
 
 import java.util.Vector;
 
