@@ -43,7 +43,7 @@ public class DBManager{
         Log.i("DB","start inserting fingerprint");
         coordinateId = coordinate_id;
         beaconMajor = beacon_major;
-        textView.setText("Inserting...");
+        textView.setText("Status: Inserting...");
         new InsertFingerprint().execute(result);
     }
 

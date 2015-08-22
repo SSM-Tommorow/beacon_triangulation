@@ -13,7 +13,9 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.example.hyeonseob.beacontriangulation.Class.Beacon;
 import com.example.hyeonseob.beacontriangulation.Class.DBManager;
+import com.example.hyeonseob.beacontriangulation.Class.LocationEstimation;
 import com.example.hyeonseob.beacontriangulation.R;
 import com.example.hyeonseob.beacontriangulation.Class.TransCoordinate;
 import com.example.hyeonseob.beacontriangulation.RECO.RECOActivity;
@@ -24,20 +26,25 @@ import com.perples.recosdk.RECORangingListener;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Vector;
 
 public class MapUpdateActivity extends RECOActivity implements RECORangingListener {
     public final static int WINDOW_SIZE = 20;
-    private int mapHeight, mapWidth, mBlockWidth, mBlockHeight;
+    private final static int INITIAL_STATE = 0, UPDATE_STATE = 1, ESTIMATION_STATE = 2;
 
-    private ImageView mCircleView;
+    private int mCurrentState = INITIAL_STATE;
     private float mX, mY, mDX, mDY;
-    private int mMajor, mMinor;
-    private StringBuffer mStrBuff;
-    private RelativeLayout mapLayout;
-    private TextView mIDTextView, mRSSITextView, mStatusTextView;
-    private ImageView mapImageView;
-    private Drawable redButton, grayButton, blueButton;
+    private int mMajor, mMinor, mRSSI;
+    private int mMapHeight, mMapWidth, mBlockWidth, mBlockHeight;
+    private Vector<Beacon> mBeaconList;
 
+    private ImageView mCircleView, mMapImageView;
+    private StringBuffer mStrBuff;
+    private RelativeLayout mMapLayout;
+    private TextView mIDTextView, mRSSITextView, mStatusTextView;
+    private Drawable mRedButton, mGrayButton, mBlueButton;
+
+    private LocationEstimation mLocEst;
     private TransCoordinate mTransCoord;
     private DBManager mDBManager;
 
@@ -46,38 +53,38 @@ public class MapUpdateActivity extends RECOActivity implements RECORangingListen
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map_update);
 
-        redButton = getResources().getDrawable(R.drawable.red_button);
-        grayButton = getResources().getDrawable(R.drawable.gray_button);
-        blueButton = getResources().getDrawable(R.drawable.blue_button);
-        mapLayout = (RelativeLayout) findViewById(R.id.mapLayout);
-        mapImageView = (ImageView) findViewById(R.id.mapImageView);
+        mRedButton = getResources().getDrawable(R.drawable.red_button);
+        mGrayButton = getResources().getDrawable(R.drawable.gray_button);
+        mBlueButton = getResources().getDrawable(R.drawable.blue_button);
+        mMapLayout = (RelativeLayout) findViewById(R.id.mapLayout);
+        mMapImageView = (ImageView) findViewById(R.id.mapImageView);
         mIDTextView = (TextView) findViewById(R.id.idTextView);
         mRSSITextView = (TextView) findViewById(R.id.RSSITextView);
         mStatusTextView = (TextView) findViewById(R.id.statusTextView);
 
         mStrBuff = new StringBuffer();
         mCircleView = new ImageView(this);
-        mCircleView.setImageDrawable(grayButton);
-        mapLayout.addView(mCircleView);
-        mapLayout.setOnTouchListener(new View.OnTouchListener() {
+        mCircleView.setImageDrawable(mGrayButton);
+        mMapLayout.addView(mCircleView);
+        mMapLayout.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 switch (event.getAction()) {
                     case MotionEvent.ACTION_DOWN:
                         mX = event.getX();
                         mY = event.getY();
-                        mDX = mX-mCircleView.getX();
-                        mDY = mY-mCircleView.getY();
+                        mDX = mX - mCircleView.getX();
+                        mDY = mY - mCircleView.getY();
                         break;
                     case MotionEvent.ACTION_MOVE:
                         mCircleView.setX(event.getX() - mDX);
-                        mCircleView.setY(event.getY()-mDY);
+                        mCircleView.setY(event.getY() - mDY);
                         break;
                     case MotionEvent.ACTION_UP:
                         mX = mCircleView.getX();
                         mY = mCircleView.getY();
                         int[] point = mTransCoord.getCoordinate(mX, mY);
-                        mIDTextView.setText("ID: "+point[0] + ", X: "+(point[1]+1)+", Y: "+(point[2]+1));
+                        mIDTextView.setText("ID: " + point[0] + ", X: " + (point[1] + 1) + ", Y: " + (point[2] + 1));
                         break;
                 }
                 return true;
@@ -86,71 +93,65 @@ public class MapUpdateActivity extends RECOActivity implements RECORangingListen
 
         mTransCoord = new TransCoordinate();
         mDBManager = new DBManager();
+        mLocEst = new LocationEstimation();
 
-        mapImageView.post(new Runnable() {
+        mMapImageView.post(new Runnable() {
             @Override
             public void run() {
-                if(mapHeight != 0)
+                if (mMapHeight != 0)
                     return;
 
-                mapHeight = mapImageView.getMeasuredHeight();
-                mapWidth = mapImageView.getMeasuredWidth();
-                Log.w("MAP", "" + mapHeight + "," + mapWidth);
+                mMapHeight = mMapImageView.getMeasuredHeight();
+                mMapWidth = mMapImageView.getMeasuredWidth();
+                Log.w("MAP", "" + mMapHeight + "," + mMapWidth);
 
-                mTransCoord.setMapSize(mapWidth, mapHeight);
+                mTransCoord.setMapSize(mMapWidth, mMapHeight);
                 mBlockWidth = mTransCoord.getBlockWidth();
                 mBlockHeight = mTransCoord.getBLockHeight();
 
-                mCircleView.setLayoutParams(new RelativeLayout.LayoutParams(mBlockWidth*2, mBlockHeight*2));
+                mCircleView.setLayoutParams(new RelativeLayout.LayoutParams(mBlockWidth * 2, mBlockHeight * 2));
             }
         });
     }
 
+
     @Override
     public void didRangeBeaconsInRegion(Collection<RECOBeacon> collection, RECOBeaconRegion recoBeaconRegion) {
         Log.i("RECORangingActivity", "didRangeBeaconsInRegion() region: " + recoBeaconRegion.getUniqueIdentifier() + ", number of beacons ranged: " + collection.size());
-
+        mBeaconList = new Vector<>();
         mStrBuff.setLength(0);
         mStrBuff.append("RSSI:\n");
         for(RECOBeacon beacon : collection)
         {
-            mMajor = beacon.getMajor()-1;
-            mMinor = beacon.getMinor()-1;
-            mStrBuff.append("Major: ");
-            mStrBuff.append(mMajor + 1);
-            mStrBuff.append(", Minor: ");
-            mStrBuff.append(mMinor+1);
-            mStrBuff.append(", RSSI: ");
-            mStrBuff.append(beacon.getRssi());
+            mMajor = beacon.getMajor();
+            mMinor = beacon.getMinor();
+            mRSSI = beacon.getRssi();
+
+            mStrBuff.append("BeaconID: (");
+            mStrBuff.append(mMajor);
+            mStrBuff.append(",");
+            mStrBuff.append(mMinor);
+            mStrBuff.append("), RSSI: ");
+            mStrBuff.append(mRSSI);
             mStrBuff.append("\n");
+
+            mBeaconList.add(new Beacon((mMajor-1)*3+mMinor,mMajor,mMinor,mRSSI));
         }
         mRSSITextView.setText(mStrBuff.toString());
-    }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        int[] result = null;
-        if(resultCode == RESULT_OK)
+        mDBManager.setTextView(mStatusTextView);
+        if(mCurrentState == UPDATE_STATE)
         {
-            result = data.getIntArrayExtra("rssi_list");
 
-            StringBuffer sb = new StringBuffer();
-            for(int a : result)
-            {
-                sb.append(a);
-                sb.append(", ");
-            }
-            mRSSITextView.setText(sb.toString());
+        }
+        else if(mCurrentState == ESTIMATION_STATE)
+        {
+            int[] point = mLocEst.getLocation(mBeaconList);
+            mStatusTextView.setText("Estimated : ("+point[0]+","+point[1]+")");
 
-            mDBManager.setTextView(mStatusTextView);
-            if(requestCode == 1)
-            {
-                //mDBManager.insertFingerprint(result, checkedButton+1, (int)result[0]);
-            }
-            else if(requestCode == 2)
-            {
-            }
+            point = mTransCoord.getPixelPoint(point[0], point[1]);
+            mCircleView.setX(point[0]);
+            mCircleView.setY(point[1]);
         }
     }
 
@@ -169,14 +170,20 @@ public class MapUpdateActivity extends RECOActivity implements RECORangingListen
             return true;
         }
         else if(id == 0) {
-            final Intent intent = new Intent(MapUpdateActivity.this, ConfidenceIntervalActivity.class);
-            startActivityForResult(intent, 1);
+            mStatusTextView.setText("Sataus: Start updating");
+            mRecoManager.setRangingListener(this);
+            mRecoManager.bind(this);
+            mBeaconList = new Vector<>();
         }
         else if(id == 1) {
+            mStatusTextView.setText("Status: Start estimating");
+            mCurrentState = ESTIMATION_STATE;
             mRecoManager.setRangingListener(this);
             mRecoManager.bind(this);
         }
         else if(id == 2) {
+            mStatusTextView.setText("Status: Stop estimating");
+            mCurrentState = INITIAL_STATE;
             this.stop(mRegions);
             this.unbind();
         }

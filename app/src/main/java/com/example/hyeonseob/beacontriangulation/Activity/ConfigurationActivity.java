@@ -23,10 +23,6 @@ public class ConfigurationActivity extends Activity {
             final Intent intent = new Intent(this, MapActivity.class);
             startActivity(intent);
         }
-        else if(btn.getId() == R.id.showConfidenceIntervalButton) {
-            final Intent intent = new Intent(this, ConfidenceIntervalActivity.class);
-            startActivity(intent);
-        }
         else if(btn.getId() == R.id.mapUpdateButton) {
             final Intent intent = new Intent(this, MapUpdateActivity.class);
             startActivity(intent);

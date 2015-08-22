@@ -18,6 +18,7 @@ import java.util.Collection;
 import java.util.Vector;
 
 public class ConfidenceIntervalActivity extends RECOActivity implements RECORangingListener {
+
     public final static int WINDOW_SIZE = 20;
     private TextView mDetectedBeaconTextView;
     private TextView mCountTextView;

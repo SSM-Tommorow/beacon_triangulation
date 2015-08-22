@@ -9,21 +9,10 @@
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Show Confidence Interval"
-        android:id="@+id/showConfidenceIntervalButton"
-        android:layout_below="@+id/rangingButton"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="26dp"
-        android:onClick="onButtonClicked"/>
-
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
         android:text="Show Map"
         android:id="@+id/showMapButton"
         android:layout_marginTop="40dp"
         android:onClick="onButtonClicked"
-        android:layout_below="@+id/showConfidenceIntervalButton"
         android:layout_centerHorizontal="true" />
 
     <Button
