@@ -1,20 +1,20 @@
 package com.example.hyeonseob.beacontriangulation.Activity;
 
-import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.RemoteException;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.example.hyeonseob.beacontriangulation.Class.Beacon;
 import com.example.hyeonseob.beacontriangulation.Class.DBManager;
+import com.example.hyeonseob.beacontriangulation.Class.FileManager;
 import com.example.hyeonseob.beacontriangulation.Class.LocationEstimation;
 import com.example.hyeonseob.beacontriangulation.R;
 import com.example.hyeonseob.beacontriangulation.Class.TransCoordinate;
@@ -24,18 +24,28 @@ import com.perples.recosdk.RECOBeaconRegion;
 import com.perples.recosdk.RECOErrorCode;
 import com.perples.recosdk.RECORangingListener;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Vector;
 
 public class MapUpdateActivity extends RECOActivity implements RECORangingListener {
-    public final static int WINDOW_SIZE = 20;
+
+    public final static int WINDOW_SIZE = 10;
     private final static int INITIAL_STATE = 0, UPDATE_STATE = 1, ESTIMATION_STATE = 2;
+
+    private final static int[][] LOCATION = {{5,62},{8,62},{12,62},{16,62},{20,63},{24,63},{28,63},{32,63},{37,63},{42,63},{46,63},{49,63},{53,73},{60,79},
+            {43,59},{43,56},{44,52},{44,49},{44,45},{44,42},{44,38},{44,35},{44,31},{44,27},{44,24},{44,19},{44,14},{44,10},{44,5},{16,26},{16,29},{16,33}};
+
+    private int[][][] mFingerprint;
+    private int[] mRSSISum;
 
     private int mCurrentState = INITIAL_STATE;
     private float mX, mY, mDX, mDY;
+    private float scale;
     private int mMajor, mMinor, mRSSI;
     private int mMapHeight, mMapWidth, mBlockWidth, mBlockHeight;
+    private int mDirection, mLocation, mMeasureCount;
     private Vector<Beacon> mBeaconList;
 
     private ImageView mCircleView, mMapImageView;
@@ -43,10 +53,14 @@ public class MapUpdateActivity extends RECOActivity implements RECORangingListen
     private RelativeLayout mMapLayout;
     private TextView mIDTextView, mRSSITextView, mStatusTextView;
     private Drawable mRedButton, mGrayButton, mBlueButton;
+    private Button mUpButton;
 
     private LocationEstimation mLocEst;
     private TransCoordinate mTransCoord;
     private DBManager mDBManager;
+    private View.OnClickListener mOcl;
+    private FileManager mFileManager;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,43 +75,39 @@ public class MapUpdateActivity extends RECOActivity implements RECORangingListen
         mIDTextView = (TextView) findViewById(R.id.idTextView);
         mRSSITextView = (TextView) findViewById(R.id.RSSITextView);
         mStatusTextView = (TextView) findViewById(R.id.statusTextView);
+        mUpButton = (Button)findViewById(R.id.upButton);
 
-        mStrBuff = new StringBuffer();
         mCircleView = new ImageView(this);
         mCircleView.setImageDrawable(mGrayButton);
         mMapLayout.addView(mCircleView);
-        mMapLayout.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                switch (event.getAction()) {
-                    case MotionEvent.ACTION_DOWN:
-                        mX = event.getX();
-                        mY = event.getY();
-                        mDX = mX - mCircleView.getX();
-                        mDY = mY - mCircleView.getY();
-                        break;
-                    case MotionEvent.ACTION_MOVE:
-                        mCircleView.setX(event.getX() - mDX);
-                        mCircleView.setY(event.getY() - mDY);
-                        break;
-                    case MotionEvent.ACTION_UP:
-                        mX = mCircleView.getX();
-                        mY = mCircleView.getY();
-                        int[] point = mTransCoord.getCoordinate(mX, mY);
-                        mIDTextView.setText("ID: " + point[0] + ", X: " + (point[1] + 1) + ", Y: " + (point[2] + 1));
-                        break;
-                }
-                return true;
-            }
-        });
 
+        mStrBuff = new StringBuffer();
         mTransCoord = new TransCoordinate();
         mDBManager = new DBManager();
         mLocEst = new LocationEstimation();
+        scale = this.getResources().getDisplayMetrics().density;
+
+        mDirection = mLocation = -1;
+        mRSSISum = new int[15];
+
+        // Read mFingerprint from text file
+        mFileManager = new FileManager();
+        mFingerprint = mFileManager.readFile();
+
+        mOcl = new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mStatusTextView.setText("Click Button: ID = "+v.getId());
+                mLocation = v.getId();
+            }
+        };
 
         mMapImageView.post(new Runnable() {
             @Override
             public void run() {
+                Button button;
+                int[] point;
+
                 if (mMapHeight != 0)
                     return;
 
@@ -110,14 +120,55 @@ public class MapUpdateActivity extends RECOActivity implements RECORangingListen
                 mBlockHeight = mTransCoord.getBLockHeight();
 
                 mCircleView.setLayoutParams(new RelativeLayout.LayoutParams(mBlockWidth * 2, mBlockHeight * 2));
+
+                for(int i=0; i<32; i++)
+                {
+                    button = new Button(MapUpdateActivity.this);
+                    button.setId(i);
+                    button.setText(Integer.toString(i));
+                    button.setTextSize(9);
+                    button.setAlpha(0.5f);
+                    button.setPadding(0, 0, 0, 0);
+
+                    //button.setLayoutParams(new RelativeLayout.LayoutParams((int) (25 * scale + 0.5f),(int) (25 * scale + 0.5f)));
+
+                    button.setLayoutParams(new RelativeLayout.LayoutParams(mBlockWidth*5, mBlockHeight*5));
+                    point = mTransCoord.getPixelPoint(LOCATION[i][0], LOCATION[i][1]);
+                    button.setX(point[0]);
+                    button.setY(point[1]);
+                    button.setOnClickListener(mOcl);
+
+                    mMapLayout.addView(button);
+                }
             }
         });
     }
 
+    public void onButtonClicked(View v){
+        switch(v.getId()) {
+            case R.id.upButton:
+                mDirection = 0;
+                mStatusTextView.setText("Status: Up Button");
+                break;
+            case R.id.rightButton:
+                mDirection = 1;
+                mStatusTextView.setText("Status: Right Button");
+                break;
+            case R.id.downButton:
+                mDirection = 2;
+                mStatusTextView.setText("Status: Down Button");
+                break;
+            case R.id.leftButton:
+                mDirection = 3;
+                mStatusTextView.setText("Status: left Button");
+                break;
+        }
+    }
 
     @Override
     public void didRangeBeaconsInRegion(Collection<RECOBeacon> collection, RECOBeaconRegion recoBeaconRegion) {
         Log.i("RECORangingActivity", "didRangeBeaconsInRegion() region: " + recoBeaconRegion.getUniqueIdentifier() + ", number of beacons ranged: " + collection.size());
+        int temp[] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
         mBeaconList = new Vector<>();
         mStrBuff.setLength(0);
         mStrBuff.append("RSSI:\n");
@@ -126,6 +177,7 @@ public class MapUpdateActivity extends RECOActivity implements RECORangingListen
             mMajor = beacon.getMajor();
             mMinor = beacon.getMinor();
             mRSSI = beacon.getRssi();
+            temp[(mMajor-1)*3+mMinor-1] = mRSSI;
 
             mStrBuff.append("BeaconID: (");
             mStrBuff.append(mMajor);
@@ -139,14 +191,29 @@ public class MapUpdateActivity extends RECOActivity implements RECORangingListen
         }
         mRSSITextView.setText(mStrBuff.toString());
 
-        mDBManager.setTextView(mStatusTextView);
+
         if(mCurrentState == UPDATE_STATE)
         {
+            mMeasureCount++;
+            for(int i=0; i<15; i++)
+                mRSSISum[i] += (temp[i] == 0)? -100 : temp[i];
 
+            if(mMeasureCount >= WINDOW_SIZE)
+            {
+                mCurrentState = INITIAL_STATE;
+                this.stop(mRegions);
+                this.unbind();
+
+                for(int i=0; i<15; i++)
+                    mFingerprint[mLocation][mDirection][i] = mRSSISum[i] / WINDOW_SIZE;
+                mFileManager.writeFile(mFingerprint);
+
+                mStatusTextView.setText("Status: Finish update");
+            }
         }
         else if(mCurrentState == ESTIMATION_STATE)
         {
-            int[] point = mLocEst.getLocation(mBeaconList);
+            int[] point = mLocEst.getLocation(mBeaconList, 1);
             mStatusTextView.setText("Estimated : ("+point[0]+","+point[1]+")");
 
             point = mTransCoord.getPixelPoint(point[0], point[1]);
@@ -170,7 +237,17 @@ public class MapUpdateActivity extends RECOActivity implements RECORangingListen
             return true;
         }
         else if(id == 0) {
-            mStatusTextView.setText("Sataus: Start updating");
+            if(mDirection == -1 || mLocation == -1)
+            {
+                mStatusTextView.setText("Status: must select direction and location");
+                return false;
+            }
+
+            mStatusTextView.setText("Sataus: Start updating (Direaciton:"+mDirection+", Location:"+mLocation+")");
+            mCurrentState = UPDATE_STATE;
+            mMeasureCount = 0;
+            for(int i=0; i<15; i++)
+                mRSSISum[i] = 0;
             mRecoManager.setRangingListener(this);
             mRecoManager.bind(this);
             mBeaconList = new Vector<>();
@@ -178,6 +255,7 @@ public class MapUpdateActivity extends RECOActivity implements RECORangingListen
         else if(id == 1) {
             mStatusTextView.setText("Status: Start estimating");
             mCurrentState = ESTIMATION_STATE;
+            mLocEst.setFingerprint(mFingerprint);
             mRecoManager.setRangingListener(this);
             mRecoManager.bind(this);
         }

@@ -13,7 +13,6 @@ import android.hardware.SensorManager;
 import android.os.Handler;
 import android.os.Message;
 import android.os.RemoteException;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -23,7 +22,6 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -41,8 +39,6 @@ import com.perples.recosdk.RECORangingListener;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.Vector;
 
 public class NavigationActivity extends RECOActivity implements RECORangingListener {
@@ -129,19 +125,15 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
     private KalmanFilter[] Kalman_ori = new KalmanFilter[3];
     private KalmanFilter[] Kalman_mag = new KalmanFilter[3];
 
-    int timer;
-    int timer2;
-    Button start;
-
-    boolean flag = false;
 
     int width, height; //화면의 폭과 높이
-    float x, y; //이미지 현재 좌표
+    float mCurrentX, mCurrentY; //이미지 현재 좌표
     float dx, dy; //캐릭터가 이동할 방향과 거리
     int cw, ch; //캐릭터의 폭과 높이
     Bitmap character;//캐릭터 비트맵 이미지
     Bitmap resized;
     int Naviflag = 0;
+    Handler mHandler;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -276,6 +268,7 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
     }
 
     public class LocationView extends View {
+
         public LocationView(Context context){
             super(context);
             DisplayMetrics metrics = new DisplayMetrics();
@@ -286,8 +279,8 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
             wid_dis = (float)(3054.1 / width);
             hei_dis = (float)(3724.5 / height);
 
-            x = 1250;
-            y = 700;
+            mCurrentX = 1250;
+            mCurrentY = 700;
             dx = 0;
             dy = 0;
             character = BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher);
@@ -297,13 +290,36 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
 
             mHandler.sendEmptyMessageDelayed(0, 20);
         }
+
         public void onDraw(Canvas canvas){
             updatedata();
-            x -= dx;
-            y -= dy;
-
-            canvas.drawBitmap(resized, x-cw, y-ch,null);
+            /*
+            if(!mTransCoord.collisionDetection((int)mCurrentX, (int)mCurrentY, (int)(mCurrentX-dx), (int)(mCurrentY-dy)))
+            {
+                mCurrentX -= dx;
+                mCurrentY -= dy;
+            }
+            */
+            mCurrentX -= dx;
+            mCurrentY -= dy;
+            canvas.drawBitmap(resized, mCurrentX -cw, mCurrentY -ch,null);
             Naviflag++;
+        }
+
+        @Override
+        public boolean onTouchEvent(MotionEvent event) {
+            switch (event.getAction()) {
+                case MotionEvent.ACTION_DOWN:
+                    break;
+                case MotionEvent.ACTION_MOVE:
+                    break;
+                case MotionEvent.ACTION_UP:
+                    mCurrentX = event.getX();
+                    mCurrentY = event.getY();
+                    mStatusTextView.setText("Sataus: start point ("+mCurrentX+","+mCurrentY+")");
+                    break;
+            }
+            return true;
         }
 
         Handler mHandler = new Handler() {               // 타이머로 사용할 Handler
@@ -363,14 +379,11 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
         @Override
         public void onSensorChanged(SensorEvent event) {
             Gyro_data = event.values.clone();
-
         }
 
         @Override
         public void onAccuracyChanged(Sensor sensor, int accuracy) {
-
         }
-
     }
 
     protected float GetEnergy(float x, float y, float z){
@@ -560,9 +573,8 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        menu.add(0, 0, Menu.NONE, "Update RSSI");
-        menu.add(0, 1, Menu.NONE, "Start Estimation");
-        menu.add(0, 2, Menu.NONE, "Stop Estimation");
+        menu.add(0, 0, Menu.NONE, "Set Starting Point");
+        menu.add(0, 1, Menu.NONE, "Start Navigating");
         return true;
     }
 
@@ -573,22 +585,13 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
             return true;
         }
         else if(id == 0) {
-            mStatusTextView.setText("Sataus: Start updating");
-            mRecoManager.setRangingListener(this);
-            mRecoManager.bind(this);
-            mBeaconList = new Vector<>();
+
         }
         else if(id == 1) {
-            mStatusTextView.setText("Status: Start estimating");
+            mStatusTextView.setText("Status: Start Navigating");
             mCurrentState = ESTIMATION_STATE;
             mRecoManager.setRangingListener(this);
             mRecoManager.bind(this);
-        }
-        else if(id == 2) {
-            mStatusTextView.setText("Status: Stop estimating");
-            mCurrentState = INITIAL_STATE;
-            this.stop(mRegions);
-            this.unbind();
         }
         return super.onOptionsItemSelected(item);
     }
