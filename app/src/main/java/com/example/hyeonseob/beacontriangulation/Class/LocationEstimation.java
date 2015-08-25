@@ -7,18 +7,25 @@ import java.util.HashMap;
 import java.util.Vector;
 
 public class LocationEstimation {
+    private final static int WINDOW_SIZE = 2;
     private SparseArray<int[]> mAdjacentNode;
     private int[][][] mFingerprint;
-    private int[][] trans = {{5,62},{8,62},{12,62},{16,62},{20,63},{24,63},{28,63},{32,63},{37,63},{42,63},{46,63},{49,63},{53,73},{60,79},
-            {43,59},{43,56},{44,52},{44,49},{44,45},{44,42},{44,38},{44,35},{44,31},{44,27},{44,24},{44,19},{44,14},{44,10},{44,5},{16,26},{16,29},{16,33}};
+    private int[][] trans = {{5,62},{11,62},{14,62},{18,62},{21,63},{26,63},{30,63},{37,63},{41,63},{46,63},{49,63},{54,64},{55,72},{61,79},
+            {43,61},{44,58},{45,54},{45,51},{45,47},{45,44},{44,40}, {44,37},{44,33},{44,29},{44,25},{44,22},{44,18},{44,14},{44,8},
+            {19,26},{16,31},{19,34}};
     private int[][] mBeaconFlag = {{0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}};
+    private double[] mRSSIAvg;
 
     private double sum, min;
-    private int count, minloc, major, minor,i,j;
-    private int mPrevLoc;
+    private int count, minloc, major, minor,i,j,temp;
+    private int mPrevLoc, mMeasureCount;
 
     public LocationEstimation(){
         mPrevLoc = -1;
+        mMeasureCount = 0;
+        mRSSIAvg = new double[15];
+
+        /*
         mAdjacentNode = new SparseArray<>();
         mAdjacentNode.append(0,new int[]{0,1});
         mAdjacentNode.append(1,new int[]{0,1,2});
@@ -34,6 +41,7 @@ public class LocationEstimation {
         mAdjacentNode.append(11,new int[]{10,11,12});
         mAdjacentNode.append(12,new int[]{11,12,13});
         mAdjacentNode.append(13,new int[]{12,13});
+        */
     }
 
     public void setFingerprint(int[][][] fingerprint) {
@@ -45,6 +53,8 @@ public class LocationEstimation {
         min = 999999999;
         count = minloc = 0;
 
+        // Ignore the first rssi value
+        /*
         int[][] tempFlag = {{0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}};
         for(i=beaconList.size()-1; i>=0; i--)
         {
@@ -61,12 +71,34 @@ public class LocationEstimation {
         }
 
         for(i=0; i<5; i++)
+        {
             for (j = 0; j < 3; j++)
                 if (tempFlag[i][j] == 0)
                     mBeaconFlag[i][j] = 0;
+        }
+        */
+
+        if(++mMeasureCount < WINDOW_SIZE) {
+            for (i = 0; i < 15; i++) {
+                temp = 0;
+                for (Beacon beacon : beaconList) {
+                    if (beacon.getId() == i + 1)
+                        temp = beacon.getRSSI();
+                }
+
+                if (temp == 0)
+                    temp = -100;
+                mRSSIAvg[i] += temp;
+            }
+
+            if(mPrevLoc == -1)
+                return new int[]{0,0};
+            return trans[mPrevLoc];
+        }
 
 
         // Search only adjacent location
+        /*
         if(mPrevLoc != -1) {
             for(int index : mAdjacentNode.get(mPrevLoc)) {
                 sum = 0;
@@ -87,6 +119,11 @@ public class LocationEstimation {
                 for (Beacon beacon : beaconList) {
                     major = beacon.getMajor();
                     minor = beacon.getMinor();
+                    // Temporary
+                    if(i>13)
+                        direction = 0;
+                    else
+                        direction = 1;
                     sum += Math.pow(Math.pow(mFingerprint[i][direction][(major - 1) * 3 + minor - 1], 2) - Math.pow(beacon.getRSSI(), 2), 2);
                 }
                 if (sum < min) {
@@ -95,10 +132,34 @@ public class LocationEstimation {
                 }
             }
         }
-        Log.i("MAP","Estimated: ("+trans[minloc][0]+","+trans[minloc][1]+")");
+        */
 
-        if(mPrevLoc == -1)
-            mPrevLoc = minloc;
+
+
+        for(i=0; i<32; i++) {
+            sum = 0;
+            for(j=0; j<15; j++){
+                // Temporary
+                if(i>13)
+                    direction = 0;
+                else
+                    direction = 1;
+
+                sum += Math.pow(Math.pow(mFingerprint[i][direction][j], 2) - Math.pow(mRSSIAvg[j], 2), 2);
+            }
+            if (sum < min) {
+                min = sum;
+                minloc = i;
+            }
+        }
+
+
+        mPrevLoc = minloc;
+        mMeasureCount = 0;
+        for(i=0; i<15; i++)
+            mRSSIAvg[i] = 0;
+
+        Log.i("MAP","Estimated: ("+trans[minloc][0]+","+trans[minloc][1]+")");
         return trans[minloc];
     }
 }
