@@ -43,7 +43,9 @@ import java.util.Vector;
 
 public class NavigationActivity extends RECOActivity implements RECORangingListener {
     public final static int WINDOW_SIZE = 20;
-    private final static int INITIAL_STATE = 0, UPDATE_STATE = 1, ESTIMATION_STATE = 2;
+    private final static int INITIAL_STATE = 0, BEACON_AND_SENSOR_STATE = 1, SENSOR_ONLY_STATE = 2;
+    private final static int[][] LOCATION = {{5,62},{8,62},{12,62},{16,62},{20,63},{24,63},{28,63},{32,63},{37,63},{42,63},{46,63},{49,63},{53,73},{60,79},
+            {43,59},{43,56},{44,52},{44,49},{44,45},{44,42},{44,38},{44,35},{44,31},{44,27},{44,24},{44,19},{44,14},{44,10},{44,5},{16,26},{16,29},{16,33}};
 
     private int mCurrentState = INITIAL_STATE;
     private float mX, mY, mDX, mDY;
@@ -52,7 +54,7 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
     private int[][] mBeaconFlag = {{0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}};
     private Vector<Beacon> mBeaconList;
 
-    private ImageView mCircleView, mMapImageView;
+    private ImageView mMapImageView;
     private StringBuffer mStrBuff;
     private RelativeLayout mMapLayout;
     private TextView mIDTextView, mRSSITextView, mStatusTextView;
@@ -74,7 +76,7 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
     float HPF_prev = 10000;
 
     //무빙 에버리지 필터
-    float[] MAF_Data = new float[10];
+    float[] MAF_Data;
     int MAF_count = 0;
     int MAF_num = 0;
 
@@ -152,10 +154,9 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
                 RelativeLayout.LayoutParams.MATCH_PARENT);
         Linear.addView(lm, params);
 
-        for(int i=0; i<10; i++){
-            MAF_Data[i] = 0;
-        }
 
+        //
+        MAF_Data = new float[10];
         Kalman_acc[0] = new KalmanFilter(0.0f);
         Kalman_acc[1] = new KalmanFilter(0.0f);
         Kalman_acc[2] = new KalmanFilter(0.0f);
@@ -186,34 +187,6 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
         mStatusTextView = (TextView) findViewById(R.id.statusTextView);
 
         mStrBuff = new StringBuffer();
-        mCircleView = new ImageView(this);
-        mCircleView.setImageDrawable(mGrayButton);
-        mMapLayout.addView(mCircleView);
-        mMapLayout.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                switch (event.getAction()) {
-                    case MotionEvent.ACTION_DOWN:
-                        mX = event.getX();
-                        mY = event.getY();
-                        mDX = mX - mCircleView.getX();
-                        mDY = mY - mCircleView.getY();
-                        break;
-                    case MotionEvent.ACTION_MOVE:
-                        mCircleView.setX(event.getX() - mDX);
-                        mCircleView.setY(event.getY() - mDY);
-                        break;
-                    case MotionEvent.ACTION_UP:
-                        mX = mCircleView.getX();
-                        mY = mCircleView.getY();
-                        int[] point = mTransCoord.getCoordinate(mX, mY);
-                        mIDTextView.setText("ID: " + point[0] + ", X: " + (point[1] + 1) + ", Y: " + (point[2] + 1));
-                        break;
-                }
-                return true;
-            }
-        });
-
         mTransCoord = new TransCoordinate();
         mDBManager = new DBManager();
 
@@ -230,8 +203,6 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
                 mTransCoord.setMapSize(mMapWidth, mMapHeight);
                 mBlockWidth = mTransCoord.getBlockWidth();
                 mBlockHeight = mTransCoord.getBLockHeight();
-
-                mCircleView.setLayoutParams(new RelativeLayout.LayoutParams(mBlockWidth * 2, mBlockHeight * 2));
             }
         });
     }
@@ -245,14 +216,13 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
         Vectordata = Max_Min_check(Vectordata);
         Vectordata = Moving_Distance(Vectordata);
         Outputdata = Cal_Mapworking(Vectordata, ((float)(Math.toDegrees(KalOri_data[0]) + 360) % 360)+240);
-        dx =((Outputdata[0]) /  wid_dis);
+        dx = ((Outputdata[0]) /  wid_dis);
         dy = ((Outputdata[1]) /  hei_dis);
     }
 
     @Override
     public void onResume(){
         super.onResume();
-
         sm.registerListener(accL, accSensor, SensorManager.SENSOR_DELAY_GAME);
         sm.registerListener(magL, magSensor, SensorManager.SENSOR_DELAY_UI);//20ms // 자력
         sm.registerListener(gyroL, gyroSensor, SensorManager.SENSOR_DELAY_GAME);//20ms // 회전
@@ -316,7 +286,7 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
                 case MotionEvent.ACTION_UP:
                     mCurrentX = event.getX();
                     mCurrentY = event.getY();
-                    mStatusTextView.setText("Sataus: start point ("+mCurrentX+","+mCurrentY+")");
+                    mStatusTextView.setText("Status: set start point ("+mCurrentX+","+mCurrentY+")");
                     break;
             }
             return true;
@@ -387,11 +357,7 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
     }
 
     protected float GetEnergy(float x, float y, float z){
-        float Energy = 0.0f;
-
-        Energy = (float)Math.sqrt((x*x + y*y + z*z));
-
-        return Energy;
+        return (float)Math.sqrt((x*x + y*y + z*z));
     }
 
     protected float GetHPFdata(float inputdata){
@@ -511,8 +477,6 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
 
     @Override
     public void didRangeBeaconsInRegion(Collection<RECOBeacon> collection, RECOBeaconRegion recoBeaconRegion) {
-        Log.i("RECORangingActivity", "didRangeBeaconsInRegion() region: " + recoBeaconRegion.getUniqueIdentifier() + ", number of beacons ranged: " + collection.size());
-
         mStrBuff.setLength(0);
         mStrBuff.append("RSSI:\n");
         for(RECOBeacon beacon : collection)
@@ -534,40 +498,14 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
         mRSSITextView.setText(mStrBuff.toString());
 
         mDBManager.setTextView(mStatusTextView);
-        if(mCurrentState == UPDATE_STATE)
-        {
-        }
-        else if(mCurrentState == ESTIMATION_STATE)
+
+        if(mCurrentState == BEACON_AND_SENSOR_STATE)
         {
 
         }
-
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        int[] result = null;
-        if(resultCode == RESULT_OK)
+        else if(mCurrentState == SENSOR_ONLY_STATE)
         {
-            result = data.getIntArrayExtra("rssi_list");
 
-            StringBuffer sb = new StringBuffer();
-            for(int a : result)
-            {
-                sb.append(a);
-                sb.append(", ");
-            }
-            mRSSITextView.setText(sb.toString());
-
-            mDBManager.setTextView(mStatusTextView);
-            if(requestCode == 1)
-            {
-                //mDBManager.insertFingerprint(result, checkedButton+1, (int)result[0]);
-            }
-            else if(requestCode == 2)
-            {
-            }
         }
     }
 
@@ -580,19 +518,6 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-        if (id == R.id.action_settings) {
-            return true;
-        }
-        else if(id == 0) {
-
-        }
-        else if(id == 1) {
-            mStatusTextView.setText("Status: Start Navigating");
-            mCurrentState = ESTIMATION_STATE;
-            mRecoManager.setRangingListener(this);
-            mRecoManager.bind(this);
-        }
         return super.onOptionsItemSelected(item);
     }
 

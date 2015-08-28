@@ -33,7 +33,6 @@ public class MapUpdateActivity extends RECOActivity implements RECORangingListen
 
     public final static int WINDOW_SIZE = 10;
     private final static int INITIAL_STATE = 0, UPDATE_STATE = 1, ESTIMATION_STATE = 2;
-
     private final static int[][] LOCATION = {{5,62},{8,62},{12,62},{16,62},{20,63},{24,63},{28,63},{32,63},{37,63},{42,63},{46,63},{49,63},{53,73},{60,79},
             {43,59},{43,56},{44,52},{44,49},{44,45},{44,42},{44,38},{44,35},{44,31},{44,27},{44,24},{44,19},{44,14},{44,10},{44,5},{16,26},{16,29},{16,33}};
 
