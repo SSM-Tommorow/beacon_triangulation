@@ -1,10 +1,10 @@
 package com.example.hyeonseob.beacontriangulation.Activity;
 
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Matrix;
 import android.graphics.drawable.Drawable;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -16,19 +16,20 @@ import android.os.RemoteException;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.example.hyeonseob.beacontriangulation.Class.Beacon;
 import com.example.hyeonseob.beacontriangulation.Class.DBManager;
+import com.example.hyeonseob.beacontriangulation.Class.FileManager;
 import com.example.hyeonseob.beacontriangulation.Class.KalmanFilter;
+import com.example.hyeonseob.beacontriangulation.Class.LocationEstimation;
 import com.example.hyeonseob.beacontriangulation.Class.TransCoordinate;
 import com.example.hyeonseob.beacontriangulation.R;
 import com.example.hyeonseob.beacontriangulation.RECO.RECOActivity;
@@ -49,9 +50,12 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
 
     private int mCurrentState = INITIAL_STATE;
     private float mX, mY, mDX, mDY;
-    private int mMajor, mMinor, mRSSI;
-    private int mMapHeight, mMapWidth, mBlockWidth, mBlockHeight;
+    private int mMajor, mMinor, mRSSI, mMapHeight, mMapWidth;
+    private double mBlockWidth, mBlockHeight;
     private int[][] mBeaconFlag = {{0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}};
+    private int[][][] mFingerprint;
+    private int[] mResult;
+    private double[] mResult2;
     private Vector<Beacon> mBeaconList;
 
     private ImageView mMapImageView;
@@ -60,8 +64,12 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
     private TextView mIDTextView, mRSSITextView, mStatusTextView;
     private Drawable mRedButton, mGrayButton, mBlueButton;
 
+    private LocationEstimation mLocEst;
     private TransCoordinate mTransCoord;
     private DBManager mDBManager;
+    private FileManager mFileManager;
+
+    private Matrix mMatrix = new Matrix();
 
     //위치그리기
     RelativeLayout Linear;
@@ -130,10 +138,12 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
 
     int width, height; //화면의 폭과 높이
     float mCurrentX, mCurrentY; //이미지 현재 좌표
+    float mBeaconX, mBeaconY, mSensorX, mSensorY;
     float mDegree;
     float dx, dy; //캐릭터가 이동할 방향과 거리
-    int cw, ch; //캐릭터의 폭과 높이
-    Bitmap character;//캐릭터 비트맵 이미지
+    int mCW, mCH, mBW, mBH; //캐릭터의 폭과 높이
+    Bitmap mCharacterBitmap, mCRotateBitmap, mBeaconBitmap, mSensorBitmap;
+
     Bitmap resized;
     int Naviflag = 0;
 
@@ -153,10 +163,12 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
                 RelativeLayout.LayoutParams.MATCH_PARENT,
                 RelativeLayout.LayoutParams.MATCH_PARENT);
         Linear.addView(lm, params);
-
+        Linear.bringChildToFront(findViewById(R.id.statusLayout));
+        Linear.invalidate();
 
         //
         mDegree = 0.0f;
+        mCurrentX = mCurrentY = mBeaconX = mBeaconY = mSensorX = mSensorY = 0.0f;
         MAF_Data = new float[10];
         Kalman_acc[0] = new KalmanFilter(0.0f);
         Kalman_acc[1] = new KalmanFilter(0.0f);
@@ -190,6 +202,7 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
         mStrBuff = new StringBuffer();
         mTransCoord = new TransCoordinate();
         mDBManager = new DBManager();
+        mLocEst = new LocationEstimation();
 
         mMapImageView.post(new Runnable() {
             @Override
@@ -206,6 +219,11 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
                 mBlockHeight = mTransCoord.getBLockHeight();
             }
         });
+
+        // Read mFingerprint from text file
+        mFileManager = new FileManager();
+        mFingerprint = mFileManager.readFile();
+        mLocEst.setFingerprint(mFingerprint);
     }
 
 
@@ -219,7 +237,7 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
         Vectordata = Max_Min_check(Vectordata);
         Vectordata = Moving_Distance(Vectordata);
         Outputdata = Cal_Mapworking(Vectordata, mDegree);
-        dx =((Outputdata[0]) /  wid_dis);
+        dx = ((Outputdata[0]) /  wid_dis);
         dy = ((Outputdata[1]) /  hei_dis);
     }
 
@@ -231,7 +249,6 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
         sm.registerListener(gyroL, gyroSensor, SensorManager.SENSOR_DELAY_GAME);//20ms // 회전
     }
 
-
     @Override
     protected void onPause() {
         super.onPause();
@@ -241,7 +258,6 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
     }
 
     public class LocationView extends View {
-
         public LocationView(Context context){
             super(context);
             DisplayMetrics metrics = new DisplayMetrics();
@@ -252,45 +268,44 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
             wid_dis = (float)(3054.1 / width);
             hei_dis = (float)(3724.5 / height);
 
-            mCurrentX = 1250;
-            mCurrentY = 700;
             dx = 0;
             dy = 0;
-            character = BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher);
-            resized = Bitmap.createScaledBitmap(character, 80, 80, true);
-            cw = resized.getWidth();
-            ch = resized.getHeight();
+            mCharacterBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher);
+            mBeaconBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.blue_button);
+            mSensorBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.red_button);
+
+            mCRotateBitmap = Bitmap.createScaledBitmap(mCharacterBitmap, 60, 60, false);
+            mBeaconBitmap = Bitmap.createScaledBitmap(mBeaconBitmap, 40, 40, false);
+            mSensorBitmap = Bitmap.createScaledBitmap(mSensorBitmap, 40, 40, false);
+            mCW = mCRotateBitmap.getWidth()/2;
+            mCH = mCRotateBitmap.getHeight()/2;
+            mBW = mBeaconBitmap.getWidth()/2;
+            mBH = mBeaconBitmap.getHeight()/2;
 
             mHandler.sendEmptyMessageDelayed(0, 20);
         }
 
         public void onDraw(Canvas canvas){
             updatedata();
-            /*
-            if(!mTransCoord.collisionDetection((int)mCurrentX, (int)mCurrentY, (int)(mCurrentX-dx), (int)(mCurrentY-dy)))
-            {
-                mCurrentX -= dx;
-                mCurrentY -= dy;
-            }
-            */
-            mCurrentX -= dx;
-            mCurrentY -= dy;
-            canvas.drawBitmap(resized, mCurrentX -cw, mCurrentY -ch,null);
+            //mCurrentX -= dx;
+            //mCurrentY -= dy;
+            mSensorX -= dx;
+            mSensorY -= dy;
+            canvas.drawBitmap(mCRotateBitmap, mCurrentX-mCW, mCurrentY-mCH, null);
+            canvas.drawBitmap(mBeaconBitmap, mBeaconX-mBW, mBeaconY-mBH, null);
+            canvas.drawBitmap(mSensorBitmap, mSensorX-mBW, mSensorY-mBH, null);
             Naviflag++;
         }
 
         @Override
         public boolean onTouchEvent(MotionEvent event) {
-            switch (event.getAction()) {
-                case MotionEvent.ACTION_DOWN:
-                    break;
-                case MotionEvent.ACTION_MOVE:
-                    break;
-                case MotionEvent.ACTION_UP:
-                    mCurrentX = event.getX();
-                    mCurrentY = event.getY();
-                    mStatusTextView.setText("Status: set start point ("+mCurrentX+","+mCurrentY+")");
-                    break;
+            if(mCurrentState == INITIAL_STATE) {
+                mCurrentX = mSensorX = mBeaconX = event.getX();
+                mCurrentY = mSensorY = mBeaconY = event.getY();
+                mStatusTextView.setText("출발 지점을 설정했습니다. ("+(int)mCurrentX+","+(int)mCurrentY+")");
+            }
+            else {
+                mStatusTextView.setText("측정 중에는 설정할 수 없습니다.");
             }
             return true;
         }
@@ -301,6 +316,74 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
                 mHandler.sendEmptyMessageDelayed(0, 20); // 10/1000초마다 실행
             }
         }; // Handler
+    }
+
+    public void onButtonClicked(View v){
+        if(v.getId() == R.id.button)
+        {
+            if(mCurrentState == INITIAL_STATE)
+            {
+                if(mCurrentX == 0)
+                {
+                    mStatusTextView.setText("시작 위치를 터치하세요.");
+                    return;
+                }
+
+                mCurrentState = SENSOR_ONLY_STATE;
+                ((Button) v).setText("STOP");
+                mStatusTextView.setText("측정을 시작합니다.");
+                mRecoManager.setRangingListener(this);
+                mRecoManager.bind(this);
+            }
+            else{
+                mCurrentState = INITIAL_STATE;
+                ((Button) v).setText("START");
+                mStatusTextView.setText("측정을 중단했습니다.");
+                this.stop(mRegions);
+                this.unbind();
+            }
+        }
+    }
+
+    @Override
+    public void didRangeBeaconsInRegion(Collection<RECOBeacon> collection, RECOBeaconRegion recoBeaconRegion) {
+        mBeaconList = new Vector<>();
+        mStrBuff.setLength(0);
+        mStrBuff.append("RSSI:\n");
+        for(RECOBeacon beacon : collection)
+        {
+            mMajor = beacon.getMajor()-1;
+            mMinor = beacon.getMinor();
+            mRSSI = beacon.getRssi();
+
+            mStrBuff.append("BeaconID: (");
+            mStrBuff.append(mMajor + 1);
+            mStrBuff.append(",");
+            mStrBuff.append(mMinor);
+            mStrBuff.append("), RSSI: ");
+            mStrBuff.append(mRSSI);
+            mStrBuff.append("\n");
+
+            mBeaconList.add(new Beacon(mMajor*3+mMinor,mMajor,mMinor,mRSSI));
+        }
+        mStrBuff.append("Degree: ");
+        mStrBuff.append(mDegree);
+        mRSSITextView.setText(mStrBuff.toString());
+        mDBManager.setTextView(mStatusTextView);
+
+        mResult = mLocEst.getLocation(mBeaconList, (int)mDegree);
+        mResult2 = mTransCoord.getPixelPoint(mResult[0], mResult[1]);
+        mBeaconX = (float)mResult2[0];
+        mBeaconY = (float)mResult2[1];
+
+        if(mCurrentState == BEACON_AND_SENSOR_STATE)
+        {
+
+        }
+        else if(mCurrentState == SENSOR_ONLY_STATE)
+        {
+
+        }
     }
 
     private class accListener implements SensorEventListener{
@@ -476,52 +559,6 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
         MW_prev_y = Output[1];
 
         return Output;
-    }
-
-    @Override
-    public void didRangeBeaconsInRegion(Collection<RECOBeacon> collection, RECOBeaconRegion recoBeaconRegion) {
-        mStrBuff.setLength(0);
-        mStrBuff.append("RSSI:\n");
-        for(RECOBeacon beacon : collection)
-        {
-            mMajor = beacon.getMajor()-1;
-            mMinor = beacon.getMinor();
-            mRSSI = beacon.getRssi();
-
-            mStrBuff.append("BeaconID: (");
-            mStrBuff.append(mMajor + 1);
-            mStrBuff.append(",");
-            mStrBuff.append(mMinor);
-            mStrBuff.append("), RSSI: ");
-            mStrBuff.append(mRSSI);
-            mStrBuff.append("\n");
-
-            mBeaconList.add(new Beacon(mMajor*3+mMinor,mMajor,mMinor,mRSSI));
-        }
-        mRSSITextView.setText(mStrBuff.toString());
-
-        mDBManager.setTextView(mStatusTextView);
-
-        if(mCurrentState == BEACON_AND_SENSOR_STATE)
-        {
-
-        }
-        else if(mCurrentState == SENSOR_ONLY_STATE)
-        {
-
-        }
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        menu.add(0, 0, Menu.NONE, "Set Starting Point");
-        menu.add(0, 1, Menu.NONE, "Start Navigating");
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        return super.onOptionsItemSelected(item);
     }
 
     @Override

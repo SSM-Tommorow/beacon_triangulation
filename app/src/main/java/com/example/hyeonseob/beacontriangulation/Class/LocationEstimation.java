@@ -3,6 +3,7 @@ package com.example.hyeonseob.beacontriangulation.Class;
 import android.util.Log;
 import android.util.SparseArray;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Vector;
 
@@ -15,15 +16,17 @@ public class LocationEstimation {
             {19,26},{16,31},{19,34}};
     private int[][] mBeaconFlag = {{0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}};
     private double[] mRSSIAvg;
+    private int[] mResult;
 
     private double sum, min;
-    private int count, minloc, major, minor,i,j,temp;
-    private int mPrevLoc, mMeasureCount;
+    private int count, minloc, i,j,temp;
+    private int mPrevLoc, mMeasureCount, mDirection;
 
     public LocationEstimation(){
         mPrevLoc = -1;
-        mMeasureCount = 0;
+        mMeasureCount = mDirection = 0;
         mRSSIAvg = new double[15];
+        mResult = new int[3];
 
         /*
         mAdjacentNode = new SparseArray<>();
@@ -52,6 +55,16 @@ public class LocationEstimation {
     {
         min = 999999999;
         count = minloc = 0;
+        if(direction <= 285)
+            mDirection = 2;
+        else if(direction <= 375)
+            mDirection = 3;
+        else if(direction <= 465)
+            mDirection = 0;
+        else if(direction <= 555)
+            mDirection = 1;
+        else
+            mDirection = 2;
 
         // Ignore the first rssi value
         /*
@@ -78,6 +91,8 @@ public class LocationEstimation {
         }
         */
 
+
+        // WindowSize
         if(++mMeasureCount < WINDOW_SIZE) {
             for (i = 0; i < 15; i++) {
                 temp = 0;
@@ -85,17 +100,32 @@ public class LocationEstimation {
                     if (beacon.getId() == i + 1)
                         temp = beacon.getRSSI();
                 }
-
                 if (temp == 0)
                     temp = -100;
                 mRSSIAvg[i] += temp;
             }
-            if(mPrevLoc == -1)
-                return new int[3];
 
-            return new int[]{trans[mPrevLoc][0], trans[mPrevLoc][1], (int)min};
+            if(mPrevLoc == -1)
+                return mResult;
+
+            mResult[0] = trans[mPrevLoc][0];
+            mResult[1] = trans[mPrevLoc][1];
+            mResult[2] = (int)min;
+            return mResult;
         }
 
+        for (i = 0; i < 15; i++) {
+            temp = 0;
+            for (Beacon beacon : beaconList) {
+                if (beacon.getId() == i + 1)
+                    temp = beacon.getRSSI();
+            }
+
+            if (temp == 0)
+                temp = -100;
+            mRSSIAvg[i] += temp;
+            mRSSIAvg[i] /= WINDOW_SIZE;
+        }
 
         // Search only adjacent location
         /*
@@ -137,13 +167,7 @@ public class LocationEstimation {
         for(i=0; i<32; i++) {
             sum = 0;
             for(j=0; j<15; j++){
-                // Temporary
-                if(i>13)
-                    direction = 0;
-                else
-                    direction = 1;
-
-                sum += Math.pow(Math.pow(mFingerprint[i][direction][j], 2) - Math.pow(mRSSIAvg[j], 2), 2);
+                sum += Math.pow(Math.pow(mFingerprint[i][mDirection][j], 2) - Math.pow(mRSSIAvg[j], 2),2);
             }
             if (sum < min) {
                 min = sum;
@@ -153,14 +177,13 @@ public class LocationEstimation {
 
         mPrevLoc = minloc;
         mMeasureCount = 0;
-        for(i=0; i<15; i++)
-            mRSSIAvg[i] = 0;
-        int[] result = new int[3];
-        result[0] = trans[minloc][0];
-        result[1] = trans[minloc][1];
-        result[2] = (int)min;
+        mRSSIAvg = new double[15];
 
-        Log.i("MAP","Estimated: ("+result[0]+","+result[1]+"), "+result[2]);
-        return result;
+        mResult[0] = trans[mPrevLoc][0];
+        mResult[1] = trans[mPrevLoc][1];
+        mResult[2] = (int)min;
+
+        Log.i("MAP","Estimated: ("+mResult[0]+","+mResult[1]+"), "+mResult[2]);
+        return mResult;
     }
 }

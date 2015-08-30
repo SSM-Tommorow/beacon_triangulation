@@ -42,8 +42,9 @@ public class MapUpdateActivity extends RECOActivity implements RECORangingListen
     private int mCurrentState = INITIAL_STATE;
     private float mX, mY, mDX, mDY;
     private float scale;
+    private double mBlockWidth, mBlockHeight;
     private int mMajor, mMinor, mRSSI;
-    private int mMapHeight, mMapWidth, mBlockWidth, mBlockHeight;
+    private int mMapHeight, mMapWidth;
     private int mDirection, mLocation, mMeasureCount;
     private Vector<Beacon> mBeaconList;
 
@@ -105,7 +106,7 @@ public class MapUpdateActivity extends RECOActivity implements RECORangingListen
             @Override
             public void run() {
                 Button button;
-                int[] point;
+                double[] point;
 
                 if (mMapHeight != 0)
                     return;
@@ -118,7 +119,7 @@ public class MapUpdateActivity extends RECOActivity implements RECORangingListen
                 mBlockWidth = mTransCoord.getBlockWidth();
                 mBlockHeight = mTransCoord.getBLockHeight();
 
-                mCircleView.setLayoutParams(new RelativeLayout.LayoutParams(mBlockWidth * 2, mBlockHeight * 2));
+                mCircleView.setLayoutParams(new RelativeLayout.LayoutParams((int)(mBlockWidth * 2), (int)(mBlockHeight * 2)));
 
                 for(int i=0; i<32; i++)
                 {
@@ -131,10 +132,10 @@ public class MapUpdateActivity extends RECOActivity implements RECORangingListen
 
                     //button.setLayoutParams(new RelativeLayout.LayoutParams((int) (25 * scale + 0.5f),(int) (25 * scale + 0.5f)));
 
-                    button.setLayoutParams(new RelativeLayout.LayoutParams(mBlockWidth*5, mBlockHeight*5));
+                    button.setLayoutParams(new RelativeLayout.LayoutParams((int)(mBlockWidth*5), (int)(mBlockHeight*5)));
                     point = mTransCoord.getPixelPoint(LOCATION[i][0], LOCATION[i][1]);
-                    button.setX(point[0]);
-                    button.setY(point[1]);
+                    button.setX((int)point[0]);
+                    button.setY((int)point[1]);
                     button.setOnClickListener(mOcl);
 
                     mMapLayout.addView(button);
@@ -215,9 +216,9 @@ public class MapUpdateActivity extends RECOActivity implements RECORangingListen
             int[] point = mLocEst.getLocation(mBeaconList, 1);
             mStatusTextView.setText("Estimated : ("+point[0]+","+point[1]+"), value : "+point[2]);
 
-            point = mTransCoord.getPixelPoint(point[0], point[1]);
-            mCircleView.setX(point[0]);
-            mCircleView.setY(point[1]);
+            double[] point2 = mTransCoord.getPixelPoint(point[0], point[1]);
+            mCircleView.setX((int)point2[0]);
+            mCircleView.setY((int)point2[1]);
         }
     }
 

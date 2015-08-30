@@ -100,12 +100,12 @@ public class TransCoordinate {
                 {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
     }
 
-    private double mWRatio, mHRatio, mMapWidth, mMapHeight;
-    private int mBlockWidth, mBLockHeight, mPrevX, mPrevY;
+    private double mWRatio, mHRatio, mMapWidth, mMapHeight, mBlockWidth, mBLockHeight;
+    private int mPrevX, mPrevY;
 
     public TransCoordinate () {
-        mWRatio = mHRatio = 0;
-        mMapWidth = mMapHeight = mBlockWidth = mBLockHeight = mPrevX = mPrevY = 0;
+        mWRatio = mHRatio = mBlockWidth = mBLockHeight = 0;
+        mMapWidth = mMapHeight =  mPrevX = mPrevY = 0;
     }
 
     public void setMapSize(int w, int h) {
@@ -113,16 +113,16 @@ public class TransCoordinate {
         mMapHeight = h;
         mWRatio = mMapWidth / MAP_WIDTH;
         mHRatio = mMapHeight / MAP_HEIGHT;
-        mBlockWidth = (int)(mMapWidth / MAP_HORIZONTAL_BLOCK + 0.5);
-        mBLockHeight = (int)(mMapHeight / MAP_VERTICAL_BLOCK + 0.5);
+        mBlockWidth = mMapWidth / MAP_HORIZONTAL_BLOCK;
+        mBLockHeight = mMapHeight / MAP_VERTICAL_BLOCK;
 
         Log.i("MAP", "Width Ratio: " + mWRatio + ", Height Ratio: " + mHRatio + ", Block Size: " + mBlockWidth + "," + mBLockHeight);
     }
 
-    public int[] getPixelPoint(int x, int y){
-        int point[] = {0,0};
-        point[0] = (int)((mBlockWidth * (x-1)) + 0.5);
-        point[1] = (int)((mBLockHeight * (y-1)) + 0.5);
+    public double[] getPixelPoint(int x, int y){
+        double point[] = {0,0};
+        point[0] = mBlockWidth * (x-1);
+        point[1] = mBLockHeight * (y-1);
 
         /*
         if(mPrevX == 0)
@@ -179,6 +179,6 @@ public class TransCoordinate {
         return false;
     }
 
-    public int getBlockWidth() { return mBlockWidth; }
-    public int getBLockHeight() { return mBLockHeight; }
+    public double getBlockWidth() { return mBlockWidth; }
+    public double getBLockHeight() { return mBLockHeight; }
 }
