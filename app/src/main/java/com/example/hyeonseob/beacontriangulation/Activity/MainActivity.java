@@ -65,7 +65,7 @@ public class MainActivity extends Activity {
         Log.i("button","button clicked!");
         Button btn = (Button)v;
         if(btn.getId() == R.id.startNavigatingButton) {
-            final Intent intent = new Intent(this, NavigationActivity.class);
+            final Intent intent = new Intent(this, IntroActivity.class);
             startActivity(intent);
         } else if(btn.getId() == R.id.manageFingerprintButton){
             final Intent intent = new Intent(this, ConfigurationActivity.class);

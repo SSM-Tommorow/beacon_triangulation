@@ -213,7 +213,7 @@ public class MapUpdateActivity extends RECOActivity implements RECORangingListen
         else if(mCurrentState == ESTIMATION_STATE)
         {
             int[] point = mLocEst.getLocation(mBeaconList, 1);
-            mStatusTextView.setText("Estimated : ("+point[0]+","+point[1]+")");
+            mStatusTextView.setText("Estimated : ("+point[0]+","+point[1]+"), value : "+point[2]);
 
             point = mTransCoord.getPixelPoint(point[0], point[1]);
             mCircleView.setX(point[0]);

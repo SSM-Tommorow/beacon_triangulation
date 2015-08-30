@@ -90,10 +90,10 @@ public class LocationEstimation {
                     temp = -100;
                 mRSSIAvg[i] += temp;
             }
-
             if(mPrevLoc == -1)
-                return new int[]{0,0};
-            return trans[mPrevLoc];
+                return new int[3];
+
+            return new int[]{trans[mPrevLoc][0], trans[mPrevLoc][1], (int)min};
         }
 
 
@@ -134,8 +134,6 @@ public class LocationEstimation {
         }
         */
 
-
-
         for(i=0; i<32; i++) {
             sum = 0;
             for(j=0; j<15; j++){
@@ -153,13 +151,16 @@ public class LocationEstimation {
             }
         }
 
-
         mPrevLoc = minloc;
         mMeasureCount = 0;
         for(i=0; i<15; i++)
             mRSSIAvg[i] = 0;
+        int[] result = new int[3];
+        result[0] = trans[minloc][0];
+        result[1] = trans[minloc][1];
+        result[2] = (int)min;
 
-        Log.i("MAP","Estimated: ("+trans[minloc][0]+","+trans[minloc][1]+")");
-        return trans[minloc];
+        Log.i("MAP","Estimated: ("+result[0]+","+result[1]+"), "+result[2]);
+        return result;
     }
 }

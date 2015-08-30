@@ -130,12 +130,12 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
 
     int width, height; //화면의 폭과 높이
     float mCurrentX, mCurrentY; //이미지 현재 좌표
+    float mDegree;
     float dx, dy; //캐릭터가 이동할 방향과 거리
     int cw, ch; //캐릭터의 폭과 높이
     Bitmap character;//캐릭터 비트맵 이미지
     Bitmap resized;
     int Naviflag = 0;
-    Handler mHandler;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -156,6 +156,7 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
 
 
         //
+        mDegree = 0.0f;
         MAF_Data = new float[10];
         Kalman_acc[0] = new KalmanFilter(0.0f);
         Kalman_acc[1] = new KalmanFilter(0.0f);
@@ -211,12 +212,14 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
     public void updatedata()
     {
         float Vectordata = GetEnergy(Kalacc_data[0], Kalacc_data[1], Kalacc_data[2]);
+        mDegree = ((float)(Math.toDegrees(KalOri_data[0]) + 360) % 360)+240;
+
         Vectordata = GetHPFdata(Vectordata);
         Vectordata = MovingAverageFilter(Vectordata);
         Vectordata = Max_Min_check(Vectordata);
         Vectordata = Moving_Distance(Vectordata);
-        Outputdata = Cal_Mapworking(Vectordata, ((float)(Math.toDegrees(KalOri_data[0]) + 360) % 360)+240);
-        dx = ((Outputdata[0]) /  wid_dis);
+        Outputdata = Cal_Mapworking(Vectordata, mDegree);
+        dx =((Outputdata[0]) /  wid_dis);
         dy = ((Outputdata[1]) /  hei_dis);
     }
 
@@ -224,7 +227,7 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
     public void onResume(){
         super.onResume();
         sm.registerListener(accL, accSensor, SensorManager.SENSOR_DELAY_GAME);
-        sm.registerListener(magL, magSensor, SensorManager.SENSOR_DELAY_UI);//20ms // 자력
+        sm.registerListener(magL, magSensor, SensorManager.SENSOR_DELAY_UI);//40ms // 자력
         sm.registerListener(gyroL, gyroSensor, SensorManager.SENSOR_DELAY_GAME);//20ms // 회전
     }
 
@@ -429,7 +432,7 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
     protected float Moving_Distance(float inputdata){
         float Output = 0.0f;
 
-        if(Math.abs(inputdata) > 0.02)
+        if(Math.abs(inputdata) > 0.03)
         //if(inputdata != 0)
         {
             if(MD_input_prev == 0){
