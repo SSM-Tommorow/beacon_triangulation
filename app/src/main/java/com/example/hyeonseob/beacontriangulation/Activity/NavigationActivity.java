@@ -271,8 +271,7 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
             wid_dis = (float)(3054.1 / width);
             hei_dis = (float)(3724.5 / height);
 
-            dx = 0;
-            dy = 0;
+            dx = dy = 0;
             mCharacterBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher);
             mBeaconBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.blue_button);
             mSensorBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.red_button);
