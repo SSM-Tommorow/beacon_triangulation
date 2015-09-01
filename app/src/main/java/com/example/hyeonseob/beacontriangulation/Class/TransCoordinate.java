@@ -123,24 +123,6 @@ public class TransCoordinate {
         double point[] = {0,0};
         point[0] = mBlockWidth * (x-1);
         point[1] = mBLockHeight * (y-1);
-
-        /*
-        if(mPrevX == 0)
-        {
-            mPrevX = point[0];
-            mPrevY = point[1];
-        }
-        else if(collisionDetection(mPrevX,mPrevY,point[0],point[1]))
-        {
-            point[0] = mPrevX;
-            point[1] = mPrevY;
-        }
-        else
-        {
-            mPrevX = point[0];
-            mPrevY = point[1];
-        }
-        */
         return point;
     }
 
@@ -150,33 +132,6 @@ public class TransCoordinate {
         point[2] = (int)(y / mHRatio / BLOCK_HEIGHT);
         point[0] = point[2]*MAP_VERTICAL_BLOCK + point[1] + 1;
         return point;
-    }
-
-    public boolean collisionDetection(int prevX, int prevY, int X, int Y)
-    {
-        int temp[], dx, dy;
-        temp = getCoordinate(prevX, prevY);
-        prevX = temp[0];
-        prevY = temp[1];
-        temp = getCoordinate(X,Y);
-        X = temp[0];
-        Y = temp[1];
-        dx = (prevX < X)? 1 : -1;
-        dy = (prevY < Y)? 1 : -1;
-
-        while(prevX != X)
-        {
-            prevX += dx;
-            if (WALL[prevX][prevY] == 1)
-                return true;
-        }
-        while(prevY != Y)
-        {
-            prevY += dy;
-            if(WALL[prevX][prevY] == 1)
-                return true;
-        }
-        return false;
     }
 
     public double getBlockWidth() { return mBlockWidth; }

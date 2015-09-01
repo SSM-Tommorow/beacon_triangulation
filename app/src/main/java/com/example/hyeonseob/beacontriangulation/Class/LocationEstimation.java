@@ -53,18 +53,18 @@ public class LocationEstimation {
 
     public int[] getLocation(Vector<Beacon> beaconList, int direction)
     {
-        min = 999999999;
         count = minloc = 0;
-        if(direction <= 285)
-            mDirection = 2;
-        else if(direction <= 375)
+
+        if(direction <= 45)
             mDirection = 3;
-        else if(direction <= 465)
+        else if(direction <= 135)
             mDirection = 0;
-        else if(direction <= 555)
+        else if(direction <= 225)
             mDirection = 1;
-        else
+        else if(direction <= 315)
             mDirection = 2;
+        else
+            mDirection = 3;
 
         // Ignore the first rssi value
         /*
@@ -164,11 +164,13 @@ public class LocationEstimation {
         }
         */
 
+        min = 999999999;
         for(i=0; i<32; i++) {
             sum = 0;
             for(j=0; j<15; j++){
                 sum += Math.pow(Math.pow(mFingerprint[i][mDirection][j], 2) - Math.pow(mRSSIAvg[j], 2),2);
             }
+            sum = Math.sqrt(sum);
             if (sum < min) {
                 min = sum;
                 minloc = i;

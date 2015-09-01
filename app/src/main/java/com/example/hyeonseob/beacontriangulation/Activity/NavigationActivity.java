@@ -40,6 +40,8 @@ import com.perples.recosdk.RECORangingListener;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.Vector;
 
 public class NavigationActivity extends RECOActivity implements RECORangingListener {
@@ -57,6 +59,7 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
     private int[] mResult;
     private double[] mResult2;
     private Vector<Beacon> mBeaconList;
+    private List<RECOBeacon> mBeaconCollect;
 
     private ImageView mMapImageView;
     private StringBuffer mStrBuff;
@@ -143,8 +146,6 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
     float dx, dy; //캐릭터가 이동할 방향과 거리
     int mCW, mCH, mBW, mBH; //캐릭터의 폭과 높이
     Bitmap mCharacterBitmap, mCRotateBitmap, mBeaconBitmap, mSensorBitmap;
-
-    Bitmap resized;
     int Naviflag = 0;
 
     @Override
@@ -230,12 +231,14 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
     public void updatedata()
     {
         float Vectordata = GetEnergy(Kalacc_data[0], Kalacc_data[1], Kalacc_data[2]);
-        mDegree = ((float)(Math.toDegrees(KalOri_data[0]) + 360) % 360)+240;
+        mDegree = ((float)(Math.toDegrees(KalOri_data[0]) +360 + 240) % 360);
+        mDegree = GetLPFdata(mDegree);
 
         Vectordata = GetHPFdata(Vectordata);
         Vectordata = MovingAverageFilter(Vectordata);
         Vectordata = Max_Min_check(Vectordata);
         Vectordata = Moving_Distance(Vectordata);
+
         Outputdata = Cal_Mapworking(Vectordata, mDegree);
         dx = ((Outputdata[0]) /  wid_dis);
         dy = ((Outputdata[1]) /  hei_dis);
@@ -287,8 +290,8 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
 
         public void onDraw(Canvas canvas){
             updatedata();
-            //mCurrentX -= dx;
-            //mCurrentY -= dy;
+            mCurrentX -= dx;
+            mCurrentY -= dy;
             mSensorX -= dx;
             mSensorY -= dy;
             canvas.drawBitmap(mCRotateBitmap, mCurrentX-mCW, mCurrentY-mCH, null);
@@ -350,21 +353,27 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
         mBeaconList = new Vector<>();
         mStrBuff.setLength(0);
         mStrBuff.append("RSSI:\n");
-        for(RECOBeacon beacon : collection)
-        {
-            mMajor = beacon.getMajor()-1;
-            mMinor = beacon.getMinor();
-            mRSSI = beacon.getRssi();
 
-            mStrBuff.append("BeaconID: (");
-            mStrBuff.append(mMajor + 1);
-            mStrBuff.append(",");
-            mStrBuff.append(mMinor);
-            mStrBuff.append("), RSSI: ");
-            mStrBuff.append(mRSSI);
-            mStrBuff.append("\n");
+        try {
+            for (RECOBeacon beacon : collection) {
+                mMajor = beacon.getMajor() - 1;
+                mMinor = beacon.getMinor();
+                mRSSI = beacon.getRssi();
 
-            mBeaconList.add(new Beacon(mMajor*3+mMinor,mMajor,mMinor,mRSSI));
+                mStrBuff.append("BeaconID: (");
+                mStrBuff.append(mMajor + 1);
+                mStrBuff.append(",");
+                mStrBuff.append(mMinor);
+                mStrBuff.append("), RSSI: ");
+                mStrBuff.append(mRSSI);
+                mStrBuff.append("\n");
+
+                mBeaconList.add(new Beacon(mMajor * 3 + mMinor, mMajor, mMinor, mRSSI));
+            }
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            return;
         }
         mStrBuff.append("Degree: ");
         mStrBuff.append(mDegree);
@@ -375,14 +384,19 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
         mResult2 = mTransCoord.getPixelPoint(mResult[0], mResult[1]);
         mBeaconX = (float)mResult2[0];
         mBeaconY = (float)mResult2[1];
+        mIDTextView.setText("MIN: "+mResult[2]);
 
-        if(mCurrentState == BEACON_AND_SENSOR_STATE)
+        if(mResult[2] < 3000)
         {
-
+            mCurrentState = BEACON_AND_SENSOR_STATE;
+            mStatusTextView.setText("비콘으로 보정중입니다.");
+            mCurrentX = mBeaconX;
+            mCurrentY = mBeaconY;
         }
-        else if(mCurrentState == SENSOR_ONLY_STATE)
+        else
         {
-
+            mCurrentState = SENSOR_ONLY_STATE;
+            mStatusTextView.setText("센서로만 측정중입니다.");
         }
     }
 
@@ -513,9 +527,10 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
     }
 
     protected float Moving_Distance(float inputdata){
+
         float Output = 0.0f;
 
-        if(Math.abs(inputdata) > 0.03)
+        if(Math.abs(inputdata) > 0.002)//0.02
         //if(inputdata != 0)
         {
             if(MD_input_prev == 0){
@@ -537,9 +552,15 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
         if(LPF_input_prev == 10000){
             Output = inputdata;
         }else{
-            Output = (float)(0.9355*LPF_output_prev + 0.0323*inputdata + 0.0323* LPF_input_prev);
+            if (Math.abs(inputdata - LPF_input_prev) < 250)
+            {
+                Output = (float)(0.9355*LPF_output_prev + 0.0323*inputdata + 0.0323* LPF_input_prev);
+            }else{
+                Output = inputdata;
+            }
         }
-
+        LPF_input_prev = inputdata;
+        LPF_output_prev = Output;
         return Output;
     }
 
@@ -550,8 +571,10 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
             Output[0] = 0;
             Output[1] = 0;
         }else{
-            Output[0] = (float)(((distance - MW_prev_dis)*100) * Math.cos((double)(angle*Math.PI / 180)));
-            Output[1] = (float)(((distance - MW_prev_dis)*100) * Math.sin((double)(angle*Math.PI / 180)));
+            if(distance - MW_prev_dis > 0.5) {
+                Output[0] = (float) (((distance - MW_prev_dis) * 100) * Math.cos((double) (angle * Math.PI / 180)));
+                Output[1] = (float) (((distance - MW_prev_dis) * 100) * Math.sin((double) (angle * Math.PI / 180)));
+            }
             MW_prev_dis = distance;
         }
 
