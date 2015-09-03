@@ -19,7 +19,7 @@ public class LocationEstimation {
     private int[] mResult;
 
     private double sum, min;
-    private int count, minloc, i,j,temp;
+    private int count, minloc, i, j, temp;
     private int mPrevLoc, mMeasureCount, mDirection;
 
     public LocationEstimation(){
@@ -97,14 +97,16 @@ public class LocationEstimation {
             for (i = 0; i < 15; i++) {
                 temp = 0;
                 for (Beacon beacon : beaconList) {
-                    if (beacon.getId() == i + 1)
+                    if (beacon.getId() == i + 1) {
                         temp = beacon.getRSSI();
+                        break;
+                    }
                 }
                 if (temp == 0)
                     temp = -100;
                 mRSSIAvg[i] += temp;
             }
-
+            /*
             if(mPrevLoc == -1)
                 return mResult;
 
@@ -112,15 +114,18 @@ public class LocationEstimation {
             mResult[1] = trans[mPrevLoc][1];
             mResult[2] = (int)min;
             return mResult;
+            */
+            return null;
         }
 
         for (i = 0; i < 15; i++) {
             temp = 0;
             for (Beacon beacon : beaconList) {
-                if (beacon.getId() == i + 1)
+                if (beacon.getId() == i + 1) {
                     temp = beacon.getRSSI();
+                    break;
+                }
             }
-
             if (temp == 0)
                 temp = -100;
             mRSSIAvg[i] += temp;
@@ -170,12 +175,14 @@ public class LocationEstimation {
             for(j=0; j<15; j++){
                 sum += Math.pow(Math.pow(mFingerprint[i][mDirection][j], 2) - Math.pow(mRSSIAvg[j], 2),2);
             }
-            sum = Math.sqrt(sum);
-            if (sum < min) {
+            if (sum < min && !isBehind(i, direction)) {
                 min = sum;
                 minloc = i;
             }
         }
+
+        if(mPrevLoc == minloc)
+            return null;
 
         mPrevLoc = minloc;
         mMeasureCount = 0;
@@ -187,5 +194,30 @@ public class LocationEstimation {
 
         Log.i("MAP","Estimated: ("+mResult[0]+","+mResult[1]+"), "+mResult[2]);
         return mResult;
+    }
+
+    private boolean isBehind(int currentLoc, int direction){
+        if(mPrevLoc == -1)
+            return false;
+
+        switch(direction){
+            case 0:
+                if(trans[mPrevLoc][1] < trans[currentLoc][1])
+                    return true;
+                break;
+            case 1:
+                if(trans[mPrevLoc][0] < trans[currentLoc][0])
+                    return true;
+                break;
+            case 2:
+                if(trans[mPrevLoc][1] > trans[currentLoc][1])
+                    return true;
+                break;
+            case 3:
+                if(trans[mPrevLoc][0] > trans[currentLoc][0])
+                    return true;
+                break;
+        }
+        return false;
     }
 }

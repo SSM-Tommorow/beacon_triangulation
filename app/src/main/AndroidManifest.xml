@@ -15,7 +15,7 @@
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
-        android:theme="@style/AppTheme" >
+        android:theme="@style/AppTheme">
         <service android:name="com.perples.recosdk.RECOBeaconService" />
 
         <activity
@@ -35,30 +35,34 @@
 
         <activity
             android:name=".Activity.ConfigurationActivity"
-            android:label="@string/title_activity_fingerprint_management" >
+            android:label="@string/title_activity_fingerprint_management"
+            android:screenOrientation="portrait">
         </activity>
         <activity
             android:name=".Activity.MapActivity"
-            android:label="@string/title_activity_map" >
+            android:label="@string/title_activity_map"
+            android:screenOrientation="portrait">
         </activity>
         <activity
             android:name=".Activity.ConfidenceIntervalActivity"
-            android:label="@string/title_activity_ranging" >
+            android:label="@string/title_activity_ranging"
+            android:screenOrientation="portrait">
         </activity>
         <activity
             android:name=".Activity.MapUpdateActivity"
             android:label="@string/title_activity_map_update"
-            android:screenOrientation="portrait" >
+            android:screenOrientation="portrait">
         </activity>
         <activity
             android:name=".Activity.NavigationActivity"
             android:label="@string/title_activity_navigation"
-            android:screenOrientation="portrait" >
+            android:screenOrientation="portrait">
         </activity>
         <activity
             android:name=".Activity.IntroActivity"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar"
-            android:label="@string/title_activity_intro" >
+            android:label="@string/title_activity_intro"
+            android:screenOrientation="portrait">
         </activity>
     </application>
 

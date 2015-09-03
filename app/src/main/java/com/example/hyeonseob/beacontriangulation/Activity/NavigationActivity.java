@@ -379,23 +379,26 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
         mRSSITextView.setText(mStrBuff.toString());
         mDBManager.setTextView(mStatusTextView);
 
-        mResult = mLocEst.getLocation(mBeaconList, (int)mDegree);
+        mResult = mLocEst.getLocation(mBeaconList, (int) mDegree);
+        if(mResult == null)
+            return;
+
         mResult2 = mTransCoord.getPixelPoint(mResult[0], mResult[1]);
         mBeaconX = (float)mResult2[0];
         mBeaconY = (float)mResult2[1];
         mIDTextView.setText("MIN: "+mResult[2]);
 
-        if(mResult[2] < 3000)
+        if(mResult[2] < 9000000)
         {
             mCurrentState = BEACON_AND_SENSOR_STATE;
-            mStatusTextView.setText("비콘으로 보정중입니다.");
             mCurrentX = mBeaconX;
             mCurrentY = mBeaconY;
+            mStatusTextView.setText("비콘으로 보정중입니다. (" + mBeaconX + "," + mBeaconY + ")");
         }
         else
         {
             mCurrentState = SENSOR_ONLY_STATE;
-            mStatusTextView.setText("센서로만 측정중입니다.");
+            mStatusTextView.setText("센서로만 측정중입니다.(" + mCurrentX + "," + mCurrentY + ")");
         }
     }
 
