@@ -88,6 +88,7 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
 
     //무빙 에버리지 필터
     float[] MAF_Data;
+    private int windowSize = 5;
     int MAF_count = 0;
     int MAF_num = 0;
 
@@ -101,7 +102,11 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
     float MD_input_prev = 0.0f;
     float MD_dis_prev = 0.0f;//이전 이동거리
     int MD_num = 0; //걸음수
-    float MD_Const = 0.7f; //상수 K
+
+    //float MD_Const = 0.78f; //걸음 거리 상수 K
+
+    float MD_Const = 0.55f; //노한민 노트4값
+    //float MD_Const = 0.78f //빌린 S4 값
     double MD_Min_const = 0.005;
 
     //로우패스필터
@@ -232,6 +237,7 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
     {
         float Vectordata = GetEnergy(Kalacc_data[0], Kalacc_data[1], Kalacc_data[2]);
         mDegree = ((float)(Math.toDegrees(KalOri_data[0]) +360 + 240) % 360);
+//        mDegree = ((float)(Math.toDegrees(Ori_data[0]) +360 + 240) % 360);
         mDegree = GetLPFdata(mDegree);
 
         Vectordata = GetHPFdata(Vectordata);
@@ -242,6 +248,10 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
         Outputdata = Cal_Mapworking(Vectordata, mDegree);
         dx = ((Outputdata[0]) /  wid_dis);
         dy = ((Outputdata[1]) /  hei_dis);
+      //  if(dx != 0 || dy!= 0){
+         //   Log.i("Tag", dx + " " + dy + " ");
+     //   }
+
     }
 
     @Override
@@ -484,13 +494,13 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
 
         MAF_Data[MAF_num++] = inputdata;
 
-        if(MAF_num >= 10)
+        if(MAF_num >= windowSize)
             MAF_num = 0;
 
-        if(MAF_count < 10)
+        if(MAF_count < windowSize)
             MAF_count++;
 
-        for(int i=0; i<10; i++)
+        for(int i=0; i<windowSize; i++)
         {
             Output += MAF_Data[i];
         }
@@ -532,7 +542,7 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
 
         float Output = 0.0f;
 
-        if(Math.abs(inputdata) > 0.002)//0.02
+        if(Math.abs(inputdata) > 0.02)//0.02
         //if(inputdata != 0)
         {
             if(MD_input_prev == 0){
@@ -573,7 +583,7 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
             Output[0] = 0;
             Output[1] = 0;
         }else{
-            if(distance - MW_prev_dis > 0.5) {
+            if(distance - MW_prev_dis > 0.35) {
                 Output[0] = (float) (((distance - MW_prev_dis) * 100) * Math.cos((double) (angle * Math.PI / 180)));
                 Output[1] = (float) (((distance - MW_prev_dis) * 100) * Math.sin((double) (angle * Math.PI / 180)));
             }
