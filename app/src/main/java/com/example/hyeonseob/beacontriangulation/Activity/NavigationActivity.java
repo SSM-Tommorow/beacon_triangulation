@@ -150,7 +150,7 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
     float mDegree;
     float dx, dy; //캐릭터가 이동할 방향과 거리
     int mCW, mCH, mBW, mBH; //캐릭터의 폭과 높이
-    Bitmap mCharacterBitmap, mCRotateBitmap, mBeaconBitmap, mSensorBitmap;
+    Bitmap mCharacterBitmap, mCRotateBitmap, mBeaconBitmap, mSensorBitmap, mRangeBitmap, mRangeImageBitmap;
     int Naviflag = 0;
 
     @Override
@@ -473,16 +473,17 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
     }
 
     protected float GetHPFdata(float inputdata){
-        float Output = 0.0f;
+        float Output;
 
         if(HPF_prev == 10000)
         {
-            HPF_prev = inputdata;
             Output = 0;
+            HPF_prev = inputdata;
+
         }else
         {
             Output = inputdata - HPF_prev;
-            HPF_prev = (float)((inputdata * (1 - HPFconst)) + (HPF_prev * HPFconst));
+            HPF_prev = (inputdata * (1 - HPFconst)) + (HPF_prev * HPFconst);
         }
 
         return Output;
@@ -511,11 +512,11 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
     }
 
     protected float Max_Min_check(float inputdata){
-        float Output = 0.0f;
+        float Output;
 
         if(MM_input_prev == 1000){
-            MM_output_value = inputdata;
             Output = 0;
+            MM_output_value = inputdata;
         }else{
             if(inputdata * MM_input_prev < 0){
                 if(Math.abs(MM_output_value) > MM_const){
@@ -540,7 +541,7 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
 
     protected float Moving_Distance(float inputdata){
 
-        float Output = 0.0f;
+        float Output;
 
         if(Math.abs(inputdata) > 0.02)//0.02
         //if(inputdata != 0)
@@ -554,22 +555,20 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
             }
         }
         Output = MD_dis_prev;
-
         return Output;
     }
 
     protected float GetLPFdata(float inputdata){
-        float Output = 0.0f;
+        float Output;
 
-        if(LPF_input_prev == 10000){
+        if(LPF_input_prev == 10000) {
             Output = inputdata;
-        }else{
+        }
+        else {
             if (Math.abs(inputdata - LPF_input_prev) < 250)
-            {
                 Output = (float)(0.9355*LPF_output_prev + 0.0323*inputdata + 0.0323* LPF_input_prev);
-            }else{
+            else
                 Output = inputdata;
-            }
         }
         LPF_input_prev = inputdata;
         LPF_output_prev = Output;
@@ -584,8 +583,8 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
             Output[1] = 0;
         }else{
             if(distance - MW_prev_dis > 0.35) {
-                Output[0] = (float) (((distance - MW_prev_dis) * 100) * Math.cos((double) (angle * Math.PI / 180)));
-                Output[1] = (float) (((distance - MW_prev_dis) * 100) * Math.sin((double) (angle * Math.PI / 180)));
+                Output[0] = (float) (((distance - MW_prev_dis) * 100) * Math.cos(angle * Math.PI / 180));
+                Output[1] = (float) (((distance - MW_prev_dis) * 100) * Math.sin(angle * Math.PI / 180));
             }
             MW_prev_dis = distance;
         }
