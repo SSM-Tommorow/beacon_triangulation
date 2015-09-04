@@ -16,6 +16,7 @@ import com.example.hyeonseob.beacontriangulation.Class.Beacon;
 import com.example.hyeonseob.beacontriangulation.Class.DBManager;
 import com.example.hyeonseob.beacontriangulation.Class.FileManager;
 import com.example.hyeonseob.beacontriangulation.Class.LocationEstimation;
+import com.example.hyeonseob.beacontriangulation.Intro.MainActivity;
 import com.example.hyeonseob.beacontriangulation.R;
 import com.example.hyeonseob.beacontriangulation.Class.TransCoordinate;
 import com.example.hyeonseob.beacontriangulation.RECO.RECOActivity;
@@ -24,7 +25,6 @@ import com.perples.recosdk.RECOBeaconRegion;
 import com.perples.recosdk.RECOErrorCode;
 import com.perples.recosdk.RECORangingListener;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Vector;

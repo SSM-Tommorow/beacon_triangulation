@@ -28,7 +28,7 @@ import java.util.ArrayList;
 import android.app.Activity;
 import android.os.Bundle;
 
-import com.example.hyeonseob.beacontriangulation.Activity.MainActivity;
+import com.example.hyeonseob.beacontriangulation.Intro.MainActivity;
 import com.perples.recosdk.RECOBeaconManager;
 import com.perples.recosdk.RECOBeaconRegion;
 import com.perples.recosdk.RECOServiceConnectListener;

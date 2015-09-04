@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.TextView;
 
+import com.example.hyeonseob.beacontriangulation.Intro.MainActivity;
 import com.example.hyeonseob.beacontriangulation.R;
 import com.example.hyeonseob.beacontriangulation.RECO.RECOActivity;
 import com.perples.recosdk.RECOBeacon;

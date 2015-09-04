@@ -1,4 +1,4 @@
-package com.example.hyeonseob.beacontriangulation.Activity;
+package com.example.hyeonseob.beacontriangulation.Intro;
 
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
@@ -10,6 +10,8 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 
+import com.example.hyeonseob.beacontriangulation.Activity.ConfigurationActivity;
+import com.example.hyeonseob.beacontriangulation.Intro.RotateActivity;
 import com.example.hyeonseob.beacontriangulation.R;
 
 
@@ -65,7 +67,7 @@ public class MainActivity extends Activity {
         Log.i("button","button clicked!");
         Button btn = (Button)v;
         if(btn.getId() == R.id.startNavigatingButton) {
-            final Intent intent = new Intent(this, IntroActivity.class);
+            final Intent intent = new Intent(this, BluetoothActivity.class);
             startActivity(intent);
         } else if(btn.getId() == R.id.manageFingerprintButton){
             final Intent intent = new Intent(this, ConfigurationActivity.class);
