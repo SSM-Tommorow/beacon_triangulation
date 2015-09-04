@@ -7,6 +7,7 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
@@ -18,7 +19,7 @@ import android.widget.TextView;
 import com.example.hyeonseob.beacontriangulation.R;
 
 public class RotateActivity extends Activity implements SensorEventListener {
-    private final static int ROTATE_ONCE = 10, NUMBER_OF_ROTATE = 5, ROTATE_THRESHOLD = ROTATE_ONCE * NUMBER_OF_ROTATE;
+    private final static int ROTATE_ONCE = 150, NUMBER_OF_ROTATE = 5, ROTATE_THRESHOLD = ROTATE_ONCE * NUMBER_OF_ROTATE;
 
     private RelativeLayout mRelativeLayout;
     private SensorManager mSensManager;
@@ -48,7 +49,7 @@ public class RotateActivity extends Activity implements SensorEventListener {
         mPrevValue = new float[3];
 
         mSensManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-        mSensor = mSensManager.getDefaultSensor(Sensor.TYPE_GAME_ROTATION_VECTOR);
+        mSensor = mSensManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
 
         mRelativeLayout.setOnTouchListener(new View.OnTouchListener() {
             @Override

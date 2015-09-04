@@ -24,6 +24,7 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.hyeonseob.beacontriangulation.Class.Beacon;
 import com.example.hyeonseob.beacontriangulation.Class.DBManager;
@@ -52,7 +53,8 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
 
     private int mCurrentState = INITIAL_STATE;
     private float mX, mY, mDX, mDY;
-    private int mMajor, mMinor, mRSSI, mMapHeight, mMapWidth;
+    private int mMajor, mMinor, mRSSI, mMapHeight, mMapWidth, mRangeSize, mRangeMargin;
+    private int mCWBound, mCHBound, mBWBound, mBHBound, mRWBound, mRHBound;
     private double mBlockWidth, mBlockHeight;
     private int[][] mBeaconFlag = {{0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}};
     private int[][][] mFingerprint;
@@ -61,18 +63,16 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
     private Vector<Beacon> mBeaconList;
     private List<RECOBeacon> mBeaconCollect;
 
-    private ImageView mMapImageView;
+    private ImageView mMapImageView, mRangeView;
     private StringBuffer mStrBuff;
     private RelativeLayout mMapLayout;
     private TextView mIDTextView, mRSSITextView, mStatusTextView;
-    private Drawable mRedButton, mGrayButton, mBlueButton;
+    private RelativeLayout.LayoutParams mLayoutParams;
 
     private LocationEstimation mLocEst;
     private TransCoordinate mTransCoord;
     private DBManager mDBManager;
     private FileManager mFileManager;
-
-    private Matrix mMatrix = new Matrix();
 
     //위치그리기
     RelativeLayout Linear;
@@ -150,7 +150,7 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
     float mDegree;
     float dx, dy; //캐릭터가 이동할 방향과 거리
     int mCW, mCH, mBW, mBH; //캐릭터의 폭과 높이
-    Bitmap mCharacterBitmap, mCRotateBitmap, mBeaconBitmap, mSensorBitmap, mRangeBitmap, mRangeImageBitmap;
+    Bitmap mCharacterBitmap, mCRotateBitmap, mBeaconBitmap, mSensorBitmap;
     int Naviflag = 0;
 
     @Override
@@ -196,14 +196,19 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
         magL = new magListener();
         gyroL = new gyroListener();
 
-        mRedButton = getResources().getDrawable(R.drawable.red_button);
-        mGrayButton = getResources().getDrawable(R.drawable.gray_button);
-        mBlueButton = getResources().getDrawable(R.drawable.blue_button);
         mMapLayout = (RelativeLayout) findViewById(R.id.mapLayout);
         mMapImageView = (ImageView) findViewById(R.id.mapImageView);
         mIDTextView = (TextView) findViewById(R.id.idTextView);
         mRSSITextView = (TextView) findViewById(R.id.RSSITextView);
         mStatusTextView = (TextView) findViewById(R.id.statusTextView);
+
+        // Add range view
+        mLayoutParams = new RelativeLayout.LayoutParams(10,10);
+        mRangeView = new ImageView(this);
+        mRangeView.setImageResource(R.drawable.image_range);
+        mRangeView.setAlpha(0.5f);
+        mRangeView.setLayoutParams(mLayoutParams);
+        mMapLayout.addView(mRangeView);
 
         mStrBuff = new StringBuffer();
         mTransCoord = new TransCoordinate();
@@ -294,6 +299,11 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
             mBW = mBeaconBitmap.getWidth()/2;
             mBH = mBeaconBitmap.getHeight()/2;
 
+            mCWBound = width - mCRotateBitmap.getWidth();
+            mCHBound = height - mCRotateBitmap.getHeight();
+            mBWBound = width - mBeaconBitmap.getWidth();
+            mBHBound = height - mBeaconBitmap.getHeight();
+
             mHandler.sendEmptyMessageDelayed(0, 20);
         }
 
@@ -303,9 +313,13 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
             mCurrentY -= dy;
             mSensorX -= dx;
             mSensorY -= dy;
-            canvas.drawBitmap(mCRotateBitmap, mCurrentX-mCW, mCurrentY-mCH, null);
-            canvas.drawBitmap(mBeaconBitmap, mBeaconX-mBW, mBeaconY-mBH, null);
-            canvas.drawBitmap(mSensorBitmap, mSensorX-mBW, mSensorY-mBH, null);
+            canvas.drawBitmap(mCRotateBitmap, Math.min(Math.max(mCurrentX-mCW, 0), mCWBound), Math.min(Math.max(mCurrentY-mCH, 0), mCHBound), null);
+            canvas.drawBitmap(mBeaconBitmap, Math.min(Math.max(mBeaconX - mBW, 0), mBWBound), Math.min(Math.max(mBeaconY - mBH, 0), mBHBound), null);
+            canvas.drawBitmap(mSensorBitmap, Math.min(Math.max(mSensorX - mBW, 0), mBWBound), Math.min(Math.max(mSensorY - mBH, 0), mBHBound), null);
+
+            mRangeView.setX(Math.min(Math.max(mCurrentX, mCW), mCWBound+mCW) - mRangeMargin);
+            mRangeView.setY(Math.min(Math.max(mCurrentY, mCH), mCHBound+mCH) - mRangeMargin);
+            mMapLayout.updateViewLayout(mRangeView, mLayoutParams);
             Naviflag++;
         }
 
@@ -337,6 +351,7 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
             {
                 if(mCurrentX == 0)
                 {
+                    Toast.makeText(this,"시작 위치를 터치하세요.",Toast.LENGTH_SHORT).show();
                     mStatusTextView.setText("시작 위치를 터치하세요.");
                     return;
                 }
@@ -396,6 +411,11 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
         mResult2 = mTransCoord.getPixelPoint(mResult[0], mResult[1]);
         mBeaconX = (float)mResult2[0];
         mBeaconY = (float)mResult2[1];
+
+        mRangeSize = mResult[2]/80000;
+        mRangeMargin = mRangeSize/2;
+        mLayoutParams.width = mRangeSize;
+        mLayoutParams.height = mRangeSize;
         mIDTextView.setText("MIN: "+mResult[2]);
 
         if(mResult[2] < 9000000)

@@ -27,7 +27,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="정확한 측정을 위해,\n스마트폰을 다음과 같이 잡고\n자세를 유지해 주세요.\n\n아무 곳이나 터치하세요."
+            android:text="정확한 측정을 위해,\n스마트폰을 다음과 같이 잡고\n자세를 유지해 주세요.\n\n화면을 터치하세요."
             android:id="@+id/textView"
             android:textSize="20sp"
             android:layout_gravity="bottom|center"
