@@ -12,12 +12,14 @@ import java.io.IOException;
 
 public class FileManager {
 
-    private static final String PATH = Environment.getExternalStorageDirectory()+"/Beacon_Triangulation/", FILE_NAME = "fingerprint.txt";
+    private static final String PATH = Environment.getExternalStorageDirectory()+"/Beacon_Triangulation/";
+    private String FILE_NAME;
     private int[][][] mInitialData;
     private File file;
 
-    public FileManager(){
+    public FileManager(String deviceString){
         mInitialData = new int[32][4][15];
+        FILE_NAME = "fingerprint_" + deviceString + ".txt";
         makeFile();
     }
 

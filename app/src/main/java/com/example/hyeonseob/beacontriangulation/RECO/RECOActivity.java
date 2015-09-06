@@ -42,7 +42,7 @@ public abstract class RECOActivity extends Activity implements RECOServiceConnec
 		super.onCreate(savedInstanceState);
 
 		mRecoManager = RECOBeaconManager.getInstance(getApplicationContext(), MainActivity.SCAN_RECO_ONLY, MainActivity.ENABLE_BACKGROUND_RANGING_TIMEOUT);
-		mRecoManager.setScanPeriod(100);
+		//mRecoManager.setScanPeriod(100);
 		mRegions = this.generateBeaconRegion();
 	}
 	

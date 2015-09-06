@@ -3,26 +3,45 @@ package com.example.hyeonseob.beacontriangulation.Class;
 import android.util.Log;
 import android.util.SparseArray;
 
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Vector;
 
 public class LocationEstimation {
+    private final static int INTERVAL = 20000000;
+    private final static int INTERVAL_1_1 = 5000000, INTERVAL_1_2 = 7000000, INTERVAL_1_3 = 12000000, INTERVAL_1_4 = 7000000, INTERVAL_1_5 = 13000000;
+    private final static int INTERVAL_2_1 = 6000000, INTERVAL_2_2 = 7000000, INTERVAL_2_3 = 8000000, INTERVAL_2_4 = 7000000, INTERVAL_2_5 = 6000000;
     private final static int WINDOW_SIZE = 2;
-    private SparseArray<int[]> mAdjacentNode;
-    private int[][][] mFingerprint;
-    private int[][] trans = {{5,62},{11,62},{14,62},{18,62},{21,63},{26,63},{30,63},{37,63},{41,63},{46,63},{49,63},{54,64},{55,72},{61,79},
+    private final static int[][] TRANS = {{5,62},{11,62},{14,62},{18,62},{21,63},{26,63},{30,63},{37,63},{41,63},{46,63},{49,63},{54,64},{55,72},{61,79},
             {43,61},{44,58},{45,54},{45,51},{45,47},{45,44},{44,40}, {44,37},{44,33},{44,29},{44,25},{44,22},{44,18},{44,14},{44,8},
             {19,26},{16,31},{19,34}};
-    private int[][] mBeaconFlag = {{0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}};
+    private final static int[][] RSSI_CONFIDENCE = {
+            {INTERVAL_1_1, INTERVAL_1_1, INTERVAL_1_1, INTERVAL_1_1, INTERVAL_1_1, INTERVAL_1_2, INTERVAL_1_2, INTERVAL_1_2, INTERVAL_1_2, INTERVAL_1_3, INTERVAL_1_3, INTERVAL_1_3, INTERVAL_1_3, INTERVAL_1_3, INTERVAL_1_3,
+                    INTERVAL_1_4, INTERVAL_1_4, INTERVAL_1_4, INTERVAL_1_4, INTERVAL_1_4, INTERVAL_1_4, INTERVAL_1_4, INTERVAL_1_4, INTERVAL_1_4, INTERVAL_1_4, INTERVAL_1_4, INTERVAL_1_4, INTERVAL_1_4, INTERVAL_1_4,
+                    INTERVAL_1_5, INTERVAL_1_5, INTERVAL_1_5},
+
+            {INTERVAL_2_1, INTERVAL_2_1, INTERVAL_2_1, INTERVAL_2_1, INTERVAL_2_1, INTERVAL_2_2, INTERVAL_2_2, INTERVAL_2_2, INTERVAL_2_2, INTERVAL_2_3, INTERVAL_2_3, INTERVAL_2_3, INTERVAL_2_3, INTERVAL_2_3, INTERVAL_2_3,
+                    INTERVAL_2_4, INTERVAL_2_4, INTERVAL_2_4, INTERVAL_2_4, INTERVAL_2_4, INTERVAL_2_4, INTERVAL_2_4, INTERVAL_2_4, INTERVAL_2_4, INTERVAL_2_4, INTERVAL_2_4, INTERVAL_2_4, INTERVAL_2_4, INTERVAL_2_4,
+                    INTERVAL_2_5, INTERVAL_2_5, INTERVAL_2_5},
+
+            {INTERVAL,INTERVAL,INTERVAL,INTERVAL,INTERVAL, INTERVAL,INTERVAL,INTERVAL,INTERVAL, INTERVAL,INTERVAL,INTERVAL,INTERVAL,INTERVAL,INTERVAL,
+                    INTERVAL,INTERVAL,INTERVAL,INTERVAL,INTERVAL,INTERVAL,INTERVAL,INTERVAL,INTERVAL,INTERVAL,INTERVAL,INTERVAL,INTERVAL,INTERVAL, INTERVAL,INTERVAL,INTERVAL},
+
+            {INTERVAL,INTERVAL,INTERVAL,INTERVAL,INTERVAL, INTERVAL,INTERVAL,INTERVAL,INTERVAL, INTERVAL,INTERVAL,INTERVAL,INTERVAL,INTERVAL,INTERVAL,
+                    INTERVAL,INTERVAL,INTERVAL,INTERVAL,INTERVAL,INTERVAL,INTERVAL,INTERVAL,INTERVAL,INTERVAL,INTERVAL,INTERVAL,INTERVAL,INTERVAL, INTERVAL,INTERVAL,INTERVAL}
+            };
+
+    private SparseArray<int[]> mAdjacentNode;
+    private int[][][] mFingerprint;
+    private boolean[] mBeaconFlag;
     private double[] mRSSIAvg;
     private int[] mResult;
+    private int mDeviceNum;
 
     private double sum, min;
     private int count, minloc, i, j, temp;
     private int mPrevLoc, mMeasureCount, mDirection;
 
-    public LocationEstimation(){
+    public LocationEstimation(int deviceNum){
+        mDeviceNum = deviceNum;
         mPrevLoc = -1;
         mMeasureCount = mDirection = 0;
         mRSSIAvg = new double[15];
@@ -51,10 +70,7 @@ public class LocationEstimation {
         mFingerprint = fingerprint;
     }
 
-    public int[] getLocation(Vector<Beacon> beaconList, int direction)
-    {
-        count = minloc = 0;
-
+    public int[] getLocation(Vector<Beacon> beaconList, int direction) {
         if(direction <= 45)
             mDirection = 3;
         else if(direction <= 135)
@@ -94,41 +110,27 @@ public class LocationEstimation {
 
         // WindowSize
         if(++mMeasureCount < WINDOW_SIZE) {
-            for (i = 0; i < 15; i++) {
-                temp = 0;
-                for (Beacon beacon : beaconList) {
-                    if (beacon.getId() == i + 1) {
-                        temp = beacon.getRSSI();
-                        break;
-                    }
-                }
-                if (temp == 0)
-                    temp = -100;
-                mRSSIAvg[i] += temp;
+            mBeaconFlag = new boolean[15];
+            for (Beacon beacon : beaconList) {
+                mRSSIAvg[beacon.getId()-1] += beacon.getRSSI();
+                mBeaconFlag[beacon.getId()-1] = true;
             }
-            /*
-            if(mPrevLoc == -1)
-                return mResult;
-
-            mResult[0] = trans[mPrevLoc][0];
-            mResult[1] = trans[mPrevLoc][1];
-            mResult[2] = (int)min;
-            return mResult;
-            */
+            for (i = 0; i < 15; i++) {
+                if(!mBeaconFlag[i])
+                    mRSSIAvg[i] += -100;
+            }
             return null;
         }
 
+        mBeaconFlag = new boolean[15];
+        for (Beacon beacon : beaconList) {
+            mRSSIAvg[beacon.getId()-1] += beacon.getRSSI();
+            mBeaconFlag[beacon.getId()-1] = true;
+        }
+
         for (i = 0; i < 15; i++) {
-            temp = 0;
-            for (Beacon beacon : beaconList) {
-                if (beacon.getId() == i + 1) {
-                    temp = beacon.getRSSI();
-                    break;
-                }
-            }
-            if (temp == 0)
-                temp = -100;
-            mRSSIAvg[i] += temp;
+            if(!mBeaconFlag[i])
+                mRSSIAvg[i] += -100;
             mRSSIAvg[i] /= WINDOW_SIZE;
         }
 
@@ -169,27 +171,32 @@ public class LocationEstimation {
         }
         */
 
+        count = minloc = 0;
         min = 999999999;
         for(i=0; i<32; i++) {
+            if(i==14)
+                continue;
+
             sum = 0;
             for(j=0; j<15; j++){
                 sum += Math.pow(Math.pow(mFingerprint[i][mDirection][j], 2) - Math.pow(mRSSIAvg[j], 2),2);
             }
-            if (sum < min && !isBehind(i, direction)) {
+            if (sum < min /*&& !isBehind(i, mDirection)*/ && sum <= RSSI_CONFIDENCE[mDeviceNum][i]) {
                 min = sum;
                 minloc = i;
             }
         }
+        Log.i("LOC","min: "+min+", minloc: "+minloc);
 
-        if(mPrevLoc == minloc)
+        if((mPrevLoc ==  minloc) || (min == 999999999))
             return null;
 
         mPrevLoc = minloc;
         mMeasureCount = 0;
         mRSSIAvg = new double[15];
 
-        mResult[0] = trans[mPrevLoc][0];
-        mResult[1] = trans[mPrevLoc][1];
+        mResult[0] = TRANS[mPrevLoc][0];
+        mResult[1] = TRANS[mPrevLoc][1];
         mResult[2] = (int)min;
 
         Log.i("MAP","Estimated: ("+mResult[0]+","+mResult[1]+"), "+mResult[2]);
@@ -202,19 +209,44 @@ public class LocationEstimation {
 
         switch(direction){
             case 0:
-                if(trans[mPrevLoc][1] < trans[currentLoc][1])
+                if(TRANS[mPrevLoc][1] < TRANS[currentLoc][1])
                     return true;
                 break;
             case 1:
-                if(trans[mPrevLoc][0] < trans[currentLoc][0])
+                if(TRANS[mPrevLoc][0] > TRANS[currentLoc][0])
                     return true;
                 break;
             case 2:
-                if(trans[mPrevLoc][1] > trans[currentLoc][1])
+                if(TRANS[mPrevLoc][1] > TRANS[currentLoc][1])
                     return true;
                 break;
             case 3:
-                if(trans[mPrevLoc][0] > trans[currentLoc][0])
+                if(TRANS[mPrevLoc][0] < TRANS[currentLoc][0])
+                    return true;
+                break;
+        }
+        return false;
+    }
+
+    private boolean isFront(int currentLoc, int direction){
+        if(mPrevLoc == -1)
+            return true;
+
+        switch(direction){
+            case 0:
+                if(TRANS[mPrevLoc][1] > TRANS[currentLoc][1])
+                    return true;
+                break;
+            case 1:
+                if(TRANS[mPrevLoc][0] < TRANS[currentLoc][0])
+                    return true;
+                break;
+            case 2:
+                if(TRANS[mPrevLoc][1] < TRANS[currentLoc][1])
+                    return true;
+                break;
+            case 3:
+                if(TRANS[mPrevLoc][0] > TRANS[currentLoc][0])
                     return true;
                 break;
         }

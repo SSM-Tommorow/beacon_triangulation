@@ -88,7 +88,7 @@ public class RotateActivity extends Activity implements SensorEventListener {
     @Override
     protected void onResume() {
         super.onResume();
-        mSensManager.registerListener(this, mSensor, SensorManager.SENSOR_DELAY_NORMAL);
+        mSensManager.registerListener(this, mSensor, SensorManager.SENSOR_DELAY_FASTEST);
     }
 
     @Override

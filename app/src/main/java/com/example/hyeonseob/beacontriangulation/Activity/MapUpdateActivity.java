@@ -14,6 +14,7 @@ import android.widget.TextView;
 
 import com.example.hyeonseob.beacontriangulation.Class.Beacon;
 import com.example.hyeonseob.beacontriangulation.Class.DBManager;
+import com.example.hyeonseob.beacontriangulation.Class.DeviceManager;
 import com.example.hyeonseob.beacontriangulation.Class.FileManager;
 import com.example.hyeonseob.beacontriangulation.Class.LocationEstimation;
 import com.example.hyeonseob.beacontriangulation.Intro.MainActivity;
@@ -80,20 +81,25 @@ public class MapUpdateActivity extends RECOActivity implements RECORangingListen
         mCircleView = new ImageView(this);
         mCircleView.setImageDrawable(mGrayButton);
         mMapLayout.addView(mCircleView);
-
         mStrBuff = new StringBuffer();
         mTransCoord = new TransCoordinate();
         mDBManager = new DBManager();
-        mLocEst = new LocationEstimation();
+
         scale = this.getResources().getDisplayMetrics().density;
 
         mDirection = mLocation = -1;
         mRSSISum = new int[15];
 
         // Read mFingerprint from text file
-        mFileManager = new FileManager();
+        DeviceManager mDeviceManager = new DeviceManager(getApplicationContext());
+        mFileManager = new FileManager(mDeviceManager.getDeviceString());
         mFingerprint = mFileManager.readFile();
 
+        //
+        mLocEst = new LocationEstimation(mDeviceManager.getDeviceNum());
+
+
+        // Set starting point
         mOcl = new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -101,7 +107,6 @@ public class MapUpdateActivity extends RECOActivity implements RECORangingListen
                 mLocation = v.getId();
             }
         };
-
         mMapImageView.post(new Runnable() {
             @Override
             public void run() {

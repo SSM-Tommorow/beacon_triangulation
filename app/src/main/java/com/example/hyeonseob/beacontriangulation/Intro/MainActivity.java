@@ -9,9 +9,10 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 
 import com.example.hyeonseob.beacontriangulation.Activity.ConfigurationActivity;
-import com.example.hyeonseob.beacontriangulation.Intro.RotateActivity;
+import com.example.hyeonseob.beacontriangulation.Class.DeviceManager;
 import com.example.hyeonseob.beacontriangulation.R;
 
 
@@ -39,6 +40,9 @@ public class MainActivity extends Activity {
             Intent enableBTIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableBTIntent, REQUEST_ENABLE_BT);
         }
+
+        DeviceManager mDeviceManager = new DeviceManager(getApplicationContext());
+        ((TextView)findViewById(R.id.androidIdTextView)).setText(mDeviceManager.getDeviceString());
     }
 
     @Override
