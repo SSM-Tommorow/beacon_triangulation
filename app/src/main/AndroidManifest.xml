@@ -65,15 +65,22 @@
         </activity>
         <activity
             android:name=".Intro.HoldActivity"
-            android:label="@string/title_activity_hold" >
+            android:label="@string/title_activity_hold"
+            android:screenOrientation="portrait" >
         </activity>
         <activity
             android:name=".Intro.StartingActivity"
-            android:label="@string/title_activity_starting" >
+            android:label="@string/title_activity_starting"
+            android:screenOrientation="portrait" >
         </activity>
         <activity
             android:name=".Intro.BluetoothActivity"
-            android:label="@string/title_activity_bluetooth" >
+            android:label="@string/title_activity_bluetooth"
+            android:screenOrientation="portrait" >
+        </activity>
+        <activity
+            android:name=".Activity.MultipleUserActivity"
+            android:label="@string/title_activity_multiple_user" >
         </activity>
     </application>
 
