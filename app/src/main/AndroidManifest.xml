@@ -82,6 +82,10 @@
             android:name=".Activity.MultipleUserActivity"
             android:label="@string/title_activity_multiple_user" >
         </activity>
+        <activity
+            android:name=".Activity.BeaconTestActivity"
+            android:label="@string/title_activity_beacon_test" >
+        </activity>
     </application>
 
 </manifest>

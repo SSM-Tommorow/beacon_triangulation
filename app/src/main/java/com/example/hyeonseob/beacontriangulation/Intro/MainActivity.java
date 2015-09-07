@@ -11,7 +11,9 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
+import com.example.hyeonseob.beacontriangulation.Activity.BeaconTestActivity;
 import com.example.hyeonseob.beacontriangulation.Activity.ConfigurationActivity;
+import com.example.hyeonseob.beacontriangulation.Activity.MultipleUserActivity;
 import com.example.hyeonseob.beacontriangulation.Class.DeviceManager;
 import com.example.hyeonseob.beacontriangulation.R;
 
@@ -75,6 +77,12 @@ public class MainActivity extends Activity {
             startActivity(intent);
         } else if(btn.getId() == R.id.manageFingerprintButton){
             final Intent intent = new Intent(this, ConfigurationActivity.class);
+            startActivity(intent);
+        } else if(btn.getId() == R.id.multipleUserButton){
+            final Intent intent = new Intent(this, MultipleUserActivity.class);
+            startActivity(intent);
+        } else if(btn.getId() == R.id.beaconTestButton){
+            final Intent intent = new Intent(this, BeaconTestActivity.class);
             startActivity(intent);
         }
     }

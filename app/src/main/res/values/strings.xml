@@ -34,4 +34,5 @@
     <string name="title_activity_starting">StartingActivity</string>
     <string name="title_activity_bluetooth">BluetoothActivity</string>
     <string name="title_activity_multiple_user">MultipleUserActivity</string>
+    <string name="title_activity_beacon_test">BeaconTestActivity</string>
 </resources>
