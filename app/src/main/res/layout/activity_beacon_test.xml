@@ -11,6 +11,7 @@
         android:layout_height="wrap_content"
         android:text="Preparing..."
         android:id="@+id/statusTextView"
+        android:textSize="20sp"
         android:layout_alignParentTop="true"
         android:layout_alignParentStart="true" />
 </RelativeLayout>

@@ -13,15 +13,6 @@
         android:layout_weight="0.2"/>
 
     <Button
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="비콘 테스트"
-        android:id="@+id/beaconTestButton"
-        android:onClick="onButtonClicked"
-        android:textSize="30sp"
-        android:layout_weight="1"/>
-
-    <Button
         android:id="@+id/startNavigatingButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -35,6 +26,15 @@
         android:layout_height="wrap_content"
         android:text="다중 사용자 측정"
         android:id="@+id/multipleUserButton"
+        android:onClick="onButtonClicked"
+        android:textSize="30sp"
+        android:layout_weight="1"/>
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="비콘 테스트"
+        android:id="@+id/beaconTestButton"
         android:onClick="onButtonClicked"
         android:textSize="30sp"
         android:layout_weight="1"/>
