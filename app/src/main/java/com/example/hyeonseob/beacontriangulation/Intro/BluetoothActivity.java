@@ -21,7 +21,7 @@ import com.example.hyeonseob.beacontriangulation.R;
 
 public class BluetoothActivity extends Activity {
     private RelativeLayout mRelativeLayout;
-    private TextView mTextView;
+    private TextView mTextView, mTextView2;
     private boolean mBluetoothOn;
 
     public static final String RECO_UUID = "24DDF411-8CF1-440C-87CD-E368DAF9C93E";
@@ -46,6 +46,7 @@ public class BluetoothActivity extends Activity {
 
         mBluetoothOn = false;
         mTextView = (TextView) findViewById(R.id.textView);
+        mTextView2 = (TextView) findViewById(R.id.textView2);
         mRelativeLayout = (RelativeLayout) findViewById(R.id.relativeLayout);
         mRelativeLayout.setOnTouchListener(new View.OnTouchListener() {
             @Override
@@ -68,7 +69,8 @@ public class BluetoothActivity extends Activity {
             startActivityForResult(enableBTIntent, REQUEST_ENABLE_BT);
         }
         else if(mBluetoothAdapter.isEnabled()){
-            mTextView.setText("블루투스가 실행되었습니다.\n측정하는 동안 연결을 유지해주세요.\n\n화면을 터치하세요.");
+            mTextView.setText("블루투스가 실행되었습니다.\n측정하는 동안 연결을 유지해주세요.");
+            mTextView2.setText("화면을 터치하세요.");
             mBluetoothOn = true;
         }
     }
@@ -81,7 +83,8 @@ public class BluetoothActivity extends Activity {
             return;
         }
         else {
-            mTextView.setText("블루투스가 실행되었습니다.\n측정하는 동안 연결을 유지해주세요.\n\n화면을 터치하세요.");
+            mTextView.setText("블루투스가 실행되었습니다.\n측정하는 동안 연결을 유지해주세요.");
+            mTextView2.setText("화면을 터치하세요.");
             mBluetoothOn = true;
         }
         super.onActivityResult(requestCode, resultCode, data);

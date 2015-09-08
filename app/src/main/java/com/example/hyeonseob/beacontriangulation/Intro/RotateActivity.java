@@ -76,7 +76,7 @@ public class RotateActivity extends Activity implements SensorEventListener {
         mProgBar.setProgress(mPercent);
         mProgTextView.setText(mPercent+"%");
         if(mProgress >= ROTATE_THRESHOLD) {
-            mTextView.setText("보정이 완료되었습니다!\n아무 곳이나 터치하세요.");
+            mTextView.setText("보정이 완료되었습니다!\n화면을 터치하세요.");
         }
     }
 

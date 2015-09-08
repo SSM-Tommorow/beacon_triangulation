@@ -7,12 +7,23 @@
     tools:context="com.example.hyeonseob.beacontriangulation.Intro.BluetoothActivity"
     android:id="@+id/relativeLayout">
 
-    <RelativeLayout
+    <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:layout_centerVertical="true"
-        android:layout_centerHorizontal="true">
+        android:layout_centerHorizontal="true"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="측정을 위해선\n블루투스 연결이 필요합니다."
+            android:id="@+id/textView"
+            android:textSize="20sp"
+            android:layout_gravity="bottom|center"
+            android:gravity="center"
+            android:layout_marginBottom="20dp"/>
 
         <ImageView
             android:layout_width="200dp"
@@ -20,20 +31,16 @@
             android:id="@+id/imageView"
             android:src="@drawable/icon_bluetooth"
             android:layout_gravity="center"
-            android:layout_alignParentTop="true"
-            android:layout_centerHorizontal="true"
             android:layout_marginBottom="20dp"/>
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="측정을 위해선 블루투스 연결이 필요합니다."
-            android:id="@+id/textView"
+            android:text=""
+            android:id="@+id/textView2"
             android:textSize="20sp"
             android:layout_gravity="bottom|center"
-            android:layout_below="@+id/imageView"
-            android:layout_alignParentStart="true"
-            android:gravity="center" />
-    </RelativeLayout>
+            android:gravity="center"/>
+    </LinearLayout>
 
 </RelativeLayout>

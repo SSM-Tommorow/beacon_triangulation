@@ -7,12 +7,22 @@
     tools:context="com.example.hyeonseob.beacontriangulation.Intro.StartingActivity"
     android:id="@+id/relativeLayout">
 
-    <RelativeLayout
+    <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:layout_centerVertical="true"
-        android:layout_centerHorizontal="true">
+        android:layout_centerHorizontal="true"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="준비가 완료되었습니다!"
+            android:textSize="20sp"
+            android:layout_gravity="bottom|center"
+            android:gravity="center"
+            android:layout_marginBottom="20dp"/>
 
         <ImageView
             android:layout_width="150dp"
@@ -20,21 +30,16 @@
             android:src="@drawable/icon_app"
             android:id="@+id/imageView2"
             android:layout_gravity="center"
-            android:layout_alignParentTop="true"
-            android:layout_centerHorizontal="true"
-            android:layout_marginBottom="20dp"
-            android:layout_alignParentEnd="false" />
+            android:layout_marginBottom="20dp"/>
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="준비가 완료되었습니다!\n화면을 터치하면 시작합니다."
+            android:text="화면을 터치하면 시작합니다."
             android:id="@+id/textView"
             android:textSize="20sp"
             android:layout_gravity="bottom|center"
-            android:gravity="center"
-            android:layout_below="@+id/imageView2"
-            android:layout_centerHorizontal="true" />
-    </RelativeLayout>
+            android:gravity="center" />
+    </LinearLayout>
 
 </RelativeLayout>

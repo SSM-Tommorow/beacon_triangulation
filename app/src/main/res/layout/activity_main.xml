@@ -1,54 +1,51 @@
-<RelativeLayout
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     tools:context="com.perples.recosample.MainActivity">
-
-    <Button
-        android:id="@+id/startNavigatingButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="30dp"
-        android:text="비교 측정"
-        android:onClick="onButtonClicked"/>
-
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Configuration"
-        android:id="@+id/manageFingerprintButton"
-        android:onClick="onButtonClicked"
-        android:layout_marginTop="33dp"
-        android:layout_below="@+id/beaconTestButton"
-        android:layout_centerHorizontal="true" />
-
     <TextView
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="ID:"
         android:id="@+id/androidIdTextView"
-        android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true" />
+        android:layout_weight="0.2"/>
 
     <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="다중 사용자 측정"
-        android:id="@+id/multipleUserButton"
-        android:onClick="onButtonClicked"
-        android:layout_below="@+id/startNavigatingButton"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="40dp" />
-
-    <Button
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="비콘 테스트"
         android:id="@+id/beaconTestButton"
         android:onClick="onButtonClicked"
-        android:layout_centerVertical="true"
-        android:layout_centerHorizontal="true" />
+        android:textSize="30sp"
+        android:layout_weight="1"/>
 
-</RelativeLayout>
+    <Button
+        android:id="@+id/startNavigatingButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="알고리즘 비교 측정"
+        android:onClick="onButtonClicked"
+        android:textSize="30sp"
+        android:layout_weight="1" />
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="다중 사용자 측정"
+        android:id="@+id/multipleUserButton"
+        android:onClick="onButtonClicked"
+        android:textSize="30sp"
+        android:layout_weight="1"/>
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="설정"
+        android:id="@+id/manageFingerprintButton"
+        android:onClick="onButtonClicked"
+        android:textSize="30sp"
+        android:layout_weight="1"/>
+
+</LinearLayout>
