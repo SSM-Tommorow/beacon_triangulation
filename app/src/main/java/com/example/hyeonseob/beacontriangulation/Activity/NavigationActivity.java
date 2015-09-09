@@ -4,8 +4,6 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
-import android.graphics.Matrix;
-import android.graphics.drawable.Drawable;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -50,12 +48,9 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
     public final static int WINDOW_SIZE = 20;
     private final static int INITIAL_STATE = 0, BEACON_AND_SENSOR_STATE = 1, SENSOR_ONLY_STATE = 2, IN_SECTION_STATE = 3;
     private final static int[] ROTATION_REVISION = {240, 240, 240, 240};
-    private final static float[] MD_CONST_REVISION = {0.6f, 0.6f, 0.68f, 0.65f};
-    private final static int[][] LOCATION = {{5,62},{8,62},{12,62},{16,62},{20,63},{24,63},{28,63},{32,63},{37,63},{42,63},{46,63},{49,63},{53,73},{60,79},
-            {43,59},{43,56},{44,52},{44,49},{44,45},{44,42},{44,38},{44,35},{44,31},{44,27},{44,24},{44,19},{44,14},{44,10},{44,5},{16,26},{16,29},{16,33}};
+    private final static float[] MD_CONST_REVISION = {0.655f, 0.6f, 0.7f, 0.7f};
 
     private int mCurrentState = INITIAL_STATE;
-    private float mX, mY, mDX, mDY;
     private int mMajor, mMinor, mRSSI, mMapHeight, mMapWidth, mRangeSize, mRangeMargin;
     private int mCWBound, mCHBound, mBWBound, mBHBound, mRWBound, mRHBound;
     private double mBlockWidth, mBlockHeight;
@@ -66,10 +61,10 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
     private Vector<Beacon> mBeaconList;
     private List<RECOBeacon> mBeaconCollect;
 
+    private TextView mStatusTextView;
     private ImageView mMapImageView, mRangeView;
     private StringBuffer mStrBuff;
     private RelativeLayout mMapLayout;
-    private TextView mRSSITextView, mStatusTextView;
     private RelativeLayout.LayoutParams mLayoutParams;
 
     private LocationEstimation mLocEst;
@@ -108,12 +103,6 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
     float MD_dis_prev = 0.0f;//이전 이동거리
     int MD_num = 0; //걸음수
 
-    //float MD_Const = 0.78f; //걸음 거리 상수 K
-
-    float MD_Const = 0.55f; //노한민 노트4값
-    //float MD_Const = 0.78f //빌린 S4 값
-    double MD_Min_const = 0.005;
-
     //로우패스필터
     float LPF_input_prev = 10000;
     float LPF_output_prev = 10000;
@@ -130,17 +119,14 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
     SensorManager sm;
     SensorEventListener accL;
     SensorEventListener magL;
-    SensorEventListener gyroL;
 
     Sensor accSensor; // 가속도
     Sensor magSensor; // 자기
-    Sensor gyroSensor; //회전
 
     float[] Mag_data = new float[3]; //지자기 데이터
     float[] Kalmag_data = new float[3];
     float[] Acc_data = new float[3]; // 칼만 가속 데이터
     float[] Kalacc_data = new float[3];
-    float[] Gyro_data = new float[3]; //자이로 데이터
     float[] Ori_data = new float[3]; //방향 데이터
     float[] KalOri_data = new float[3]; //칼만 방향 데이터
 
@@ -152,7 +138,7 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
     int width, height; //화면의 폭과 높이
     float mCurrentX, mCurrentY; //이미지 현재 좌표
     float mBeaconX, mBeaconY, mSensorX, mSensorY;
-    float mDegree, mDegree2;
+    float mDegree;
     float dx, dy; //캐릭터가 이동할 방향과 거리
     int mCW, mCH, mBW, mBH; //캐릭터의 폭과 높이
     Bitmap mCharacterBitmap, mCRotateBitmap, mBeaconBitmap, mSensorBitmap;
@@ -206,7 +192,6 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
 
         mMapLayout = (RelativeLayout) findViewById(R.id.mapLayout);
         mMapImageView = (ImageView) findViewById(R.id.mapImageView);
-        mRSSITextView = (TextView) findViewById(R.id.RSSITextView);
         mStatusTextView = (TextView) findViewById(R.id.statusTextView);
 
         // Add range view
@@ -257,7 +242,6 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
     {
         float Vectordata = GetEnergy(Kalacc_data[0], Kalacc_data[1], Kalacc_data[2]);
         mDegree = ((float)(Math.toDegrees(KalOri_data[0]) +360 +ROTATION_REVISION[mDeviceNum]) % 360);
-//      mDegree = ((float)(Math.toDegrees(Ori_data[0]) +360 + 240) % 360);
         mDegree = GetLPFdata(mDegree);
 
         Vectordata = GetHPFdata(Vectordata);
@@ -325,7 +309,6 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
                 mCurrentY = Math.min(Math.max(mCurrentY-dy,0),mCHBound);
                 mSensorX = Math.min(Math.max(mSensorX-dx,0),mBWBound);
                 mSensorY =  Math.min(Math.max(mSensorY-dy,0),mBHBound);
-
             }
 
             canvas.drawBitmap(mBeaconBitmap, mBeaconX-mBW, mBeaconY-mBH, null);
@@ -343,10 +326,8 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
             if(mCurrentState == INITIAL_STATE) {
                 mCurrentX = mSensorX = mBeaconX = event.getX();
                 mCurrentY = mSensorY = mBeaconY = event.getY();
-                mStatusTextView.setText("출발 지점을 설정했습니다.");
-            }
-            else {
-                mStatusTextView.setText("측정 중에는 설정할 수 없습니다.");
+                if(event.getAction() == MotionEvent.ACTION_UP)
+                    Toast.makeText(NavigationActivity.this, "출발지점을 설정했습니다.", Toast.LENGTH_SHORT).show();
             }
             return true;
         }
@@ -367,20 +348,19 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
                 if(mCurrentX == 0)
                 {
                     Toast.makeText(this,"시작 위치를 터치하세요.",Toast.LENGTH_SHORT).show();
-                    mStatusTextView.setText("시작 위치를 터치하세요.");
                     return;
                 }
 
                 mCurrentState = SENSOR_ONLY_STATE;
                 ((Button) v).setText("STOP");
-                mStatusTextView.setText("측정을 시작합니다.");
+                Toast.makeText(this,"측정을 시작합니다.",Toast.LENGTH_SHORT).show();
                 mRecoManager.setRangingListener(this);
                 mRecoManager.bind(this);
             }
             else{
                 mCurrentState = INITIAL_STATE;
                 ((Button) v).setText("START");
-                mStatusTextView.setText("측정을 중단했습니다.");
+                Toast.makeText(this,"중단하였습니다.",Toast.LENGTH_SHORT).show();
                 this.stop(mRegions);
                 this.unbind();
             }
@@ -389,10 +369,9 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
 
     @Override
     public void didRangeBeaconsInRegion(Collection<RECOBeacon> collection, RECOBeaconRegion recoBeaconRegion) {
-        Log.i("BEACON","didRangeBeaconinRegion: "+collection.size());
+        Log.i("BEACON", "didRangeBeaconinRegion: " + collection.size());
         mBeaconList = new Vector<>();
-        mStrBuff.setLength(0);
-        mStrBuff.append("RSSI:\n");
+
         try {
             for (RECOBeacon beacon : collection) {
                 mMajor = beacon.getMajor() - 1;
@@ -406,10 +385,6 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
             Log.i("BEACON","Collection error!");
             return;
         }
-        mStrBuff.append("Degree: ");
-        mStrBuff.append(mDegree);
-        mRSSITextView.setText(mStrBuff.toString());
-        mDBManager.setTextView(mStatusTextView);
 
         mResult = mLocEst.getLocation(mBeaconList, (int) mDegree);
         if(mResult == null)
@@ -418,12 +393,12 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
         mResult2 = mTransCoord.getPixelPoint(mResult[0], mResult[1]);
         mBeaconX = (float)mResult2[0];
         mBeaconY = (float)mResult2[1];
+        mStatusTextView.setText("M:"+mResult[2]);
 
-        mRangeSize = Math.min(mResult[2]/80000,500);
+        mRangeSize = Math.min(mResult[2]/20000,500);
         mRangeMargin = mRangeSize/2;
         mLayoutParams.width = mRangeSize;
         mLayoutParams.height = mRangeSize;
-        mStatusTextView.setText("MIN: " + mResult[2]);
 
         mCurrentX = mBeaconX;
         mCurrentY = mBeaconY;

@@ -6,8 +6,10 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
@@ -18,7 +20,7 @@ import android.widget.TextView;
 
 import com.example.hyeonseob.beacontriangulation.R;
 
-public class RotateActivity extends Activity implements SensorEventListener {
+public class RotateActivity2 extends Activity implements SensorEventListener {
     private final static int ROTATE_ONCE = 150, NUMBER_OF_ROTATE = 15, ROTATE_THRESHOLD = ROTATE_ONCE * NUMBER_OF_ROTATE;
 
     private RelativeLayout mRelativeLayout;
@@ -39,7 +41,7 @@ public class RotateActivity extends Activity implements SensorEventListener {
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_rotate);
+        setContentView(R.layout.activity_rotate2);
 
         mRelativeLayout = (RelativeLayout) findViewById(R.id.relativeLayout);
         mProgBar = (ProgressBar) findViewById(R.id.progressBar);
@@ -55,7 +57,7 @@ public class RotateActivity extends Activity implements SensorEventListener {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 if (mProgress >= ROTATE_THRESHOLD) {
-                    final Intent intent = new Intent(RotateActivity.this, HoldActivity.class);
+                    final Intent intent = new Intent(RotateActivity2.this, HoldActivity2.class);
                     startActivity(intent);
                     finish();
                 }
@@ -97,7 +99,3 @@ public class RotateActivity extends Activity implements SensorEventListener {
         mSensManager.unregisterListener(this);
     }
 }
-
-
-
-

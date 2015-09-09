@@ -47,12 +47,9 @@ public class MultipleUserActivity extends RECOActivity implements RECORangingLis
     public final static int WINDOW_SIZE = 20;
     private final static int INITIAL_STATE = 0, BEACON_AND_SENSOR_STATE = 1, SENSOR_ONLY_STATE = 2, IN_SECTION_STATE = 3;
     private final static int[] ROTATION_REVISION = {240, 240, 240, 240};
-    private final static float[] MD_CONST_REVISION = {0.6f, 0.6f, 0.68f, 0.65f};
-    private final static int[][] LOCATION = {{5,62},{8,62},{12,62},{16,62},{20,63},{24,63},{28,63},{32,63},{37,63},{42,63},{46,63},{49,63},{53,73},{60,79},
-            {43,59},{43,56},{44,52},{44,49},{44,45},{44,42},{44,38},{44,35},{44,31},{44,27},{44,24},{44,19},{44,14},{44,10},{44,5},{16,26},{16,29},{16,33}};
+    private final static float[] MD_CONST_REVISION = {0.655f, 0.6f, 0.7f, 0.7f};
 
     private int mCurrentState = INITIAL_STATE;
-    private float mX, mY, mDX, mDY;
     private int mMajor, mMinor, mRSSI, mMapHeight, mMapWidth, mRangeSize, mRangeMargin;
     private int mCWBound, mCHBound, mBWBound, mBHBound, mRWBound, mRHBound;
     private double mBlockWidth, mBlockHeight;
@@ -60,7 +57,6 @@ public class MultipleUserActivity extends RECOActivity implements RECORangingLis
     private int[][][] mFingerprint;
     private int[] mResult;
     private double[] mResult2;
-    //private float[][][] mSectionRegion = {{{12,0},{36,20}},{{48,0},{70,57}}};
     private Vector<Beacon> mBeaconList;
     private List<RECOBeacon> mBeaconCollect;
 
@@ -71,6 +67,7 @@ public class MultipleUserActivity extends RECOActivity implements RECORangingLis
 
     private LocationEstimation mLocEst;
     private TransCoordinate mTransCoord;
+    private DBManager mDBManager;
     private FileManager mFileManager;
     private DeviceManager mDeviceManager;
     private int mDeviceNum;
@@ -104,12 +101,6 @@ public class MultipleUserActivity extends RECOActivity implements RECORangingLis
     float MD_dis_prev = 0.0f;//이전 이동거리
     int MD_num = 0; //걸음수
 
-    //float MD_Const = 0.78f; //걸음 거리 상수 K
-
-    float MD_Const = 0.55f; //노한민 노트4값
-    //float MD_Const = 0.78f //빌린 S4 값
-    double MD_Min_const = 0.005;
-
     //로우패스필터
     float LPF_input_prev = 10000;
     float LPF_output_prev = 10000;
@@ -126,17 +117,14 @@ public class MultipleUserActivity extends RECOActivity implements RECORangingLis
     SensorManager sm;
     SensorEventListener accL;
     SensorEventListener magL;
-    SensorEventListener gyroL;
 
     Sensor accSensor; // 가속도
     Sensor magSensor; // 자기
-    Sensor gyroSensor; //회전
 
     float[] Mag_data = new float[3]; //지자기 데이터
     float[] Kalmag_data = new float[3];
     float[] Acc_data = new float[3]; // 칼만 가속 데이터
     float[] Kalacc_data = new float[3];
-    float[] Gyro_data = new float[3]; //자이로 데이터
     float[] Ori_data = new float[3]; //방향 데이터
     float[] KalOri_data = new float[3]; //칼만 방향 데이터
 
@@ -148,10 +136,10 @@ public class MultipleUserActivity extends RECOActivity implements RECORangingLis
     int width, height; //화면의 폭과 높이
     float mCurrentX, mCurrentY; //이미지 현재 좌표
     float mBeaconX, mBeaconY, mSensorX, mSensorY;
-    float mDegree, mDegree2;
+    float mDegree;
     float dx, dy; //캐릭터가 이동할 방향과 거리
     int mCW, mCH, mBW, mBH; //캐릭터의 폭과 높이
-    Bitmap mCharacterBitmap, mCRotateBitmap, mBeaconBitmap, mSensorBitmap;
+    Bitmap mCharacterBitmap, mCRotateBitmap;
     int Naviflag = 0;
 
     @Override
@@ -177,7 +165,7 @@ public class MultipleUserActivity extends RECOActivity implements RECORangingLis
 
         // Initilalize
         mDegree = 0.0f;
-        mCurrentX = mCurrentY = /*mBeaconX = mBeaconY = mSensorX = mSensorY =*/ 0.0f;
+        mCurrentX = mCurrentY = mBeaconX = mBeaconY = mSensorX = mSensorY = 0.0f;
         MAF_Data = new float[10];
         Kalman_acc[0] = new KalmanFilter(0.0f);
         Kalman_acc[1] = new KalmanFilter(0.0f);
@@ -194,11 +182,8 @@ public class MultipleUserActivity extends RECOActivity implements RECORangingLis
         accSensor = sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         magSensor = sm.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD); // 자력
 
-        //gyroSensor = sm.getDefaultSensor(Sensor.TYPE_GYROSCOPE); // 회전
-
         accL = new accListener();
         magL = new magListener();
-        //gyroL = new gyroListener();
 
         mMapLayout = (RelativeLayout) findViewById(R.id.mapLayout);
         mMapImageView = (ImageView) findViewById(R.id.mapImageView);
@@ -213,6 +198,8 @@ public class MultipleUserActivity extends RECOActivity implements RECORangingLis
 
         mStrBuff = new StringBuffer();
         mTransCoord = new TransCoordinate();
+        mDBManager = new DBManager();
+
 
         mMapImageView.post(new Runnable() {
             @Override
@@ -256,10 +243,10 @@ public class MultipleUserActivity extends RECOActivity implements RECORangingLis
         Vectordata = Max_Min_check(Vectordata);
         Vectordata = Moving_Distance(Vectordata);
 
+
         Outputdata = Cal_Mapworking(Vectordata, mDegree);
         dx = ((Outputdata[0]) /  wid_dis);
         dy = ((Outputdata[1]) /  hei_dis);
-
     }
 
     @Override
@@ -289,11 +276,14 @@ public class MultipleUserActivity extends RECOActivity implements RECORangingLis
 
             dx = dy = 0;
             mCharacterBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.icon_location);
-            mCRotateBitmap = Bitmap.createScaledBitmap(mCharacterBitmap, 60, 60, false);
+
+            mCRotateBitmap = Bitmap.createScaledBitmap(mCharacterBitmap, 70, 70, false);
             mCW = mCRotateBitmap.getWidth()/2;
             mCH = mCRotateBitmap.getHeight()/2;
+
             mCWBound = width - mCRotateBitmap.getWidth();
             mCHBound = height - mCRotateBitmap.getHeight();
+
             mHandler.sendEmptyMessageDelayed(0, 20);
         }
 
@@ -303,8 +293,12 @@ public class MultipleUserActivity extends RECOActivity implements RECORangingLis
                 updatedata();
                 mCurrentX = Math.min(Math.max(mCurrentX-dx,0),mCWBound);
                 mCurrentY = Math.min(Math.max(mCurrentY-dy,0),mCHBound);
+                mSensorX = Math.min(Math.max(mSensorX-dx,0),mBWBound);
+                mSensorY =  Math.min(Math.max(mSensorY-dy,0),mBHBound);
+
             }
             canvas.drawBitmap(mCRotateBitmap, mCurrentX-mCW, mCurrentY-mCH, null);
+
             mRangeView.setX(Math.min(Math.max(mCurrentX, mCW), mCWBound+mCW) - mRangeMargin);
             mRangeView.setY(Math.min(Math.max(mCurrentY, mCH), mCHBound+mCH) - mRangeMargin);
             mMapLayout.updateViewLayout(mRangeView, mLayoutParams);
@@ -314,8 +308,8 @@ public class MultipleUserActivity extends RECOActivity implements RECORangingLis
         @Override
         public boolean onTouchEvent(MotionEvent event) {
             if(mCurrentState == INITIAL_STATE) {
-                mCurrentX = event.getX();
-                mCurrentY = event.getY();
+                mCurrentX = mSensorX = mBeaconX = event.getX();
+                mCurrentY = mSensorY = mBeaconY = event.getY();
                 if(event.getAction() == MotionEvent.ACTION_UP)
                     Toast.makeText(MultipleUserActivity.this, "출발지점을 설정했습니다.", Toast.LENGTH_SHORT).show();
             }
@@ -361,8 +355,7 @@ public class MultipleUserActivity extends RECOActivity implements RECORangingLis
     public void didRangeBeaconsInRegion(Collection<RECOBeacon> collection, RECOBeaconRegion recoBeaconRegion) {
         Log.i("BEACON","didRangeBeaconinRegion: "+collection.size());
         mBeaconList = new Vector<>();
-        mStrBuff.setLength(0);
-        mStrBuff.append("RSSI:\n");
+
         try {
             for (RECOBeacon beacon : collection) {
                 mMajor = beacon.getMajor() - 1;
@@ -376,20 +369,22 @@ public class MultipleUserActivity extends RECOActivity implements RECORangingLis
             Log.i("BEACON","Collection error!");
             return;
         }
-        mStrBuff.append("Degree: ");
-        mStrBuff.append(mDegree);
+
         mResult = mLocEst.getLocation(mBeaconList, (int) mDegree);
         if(mResult == null)
             return;
 
         mResult2 = mTransCoord.getPixelPoint(mResult[0], mResult[1]);
-        mCurrentX = (float)mResult2[0];
-        mCurrentY = (float)mResult2[1];
+        mBeaconX = (float)mResult2[0];
+        mBeaconY = (float)mResult2[1];
 
-        mRangeSize = Math.min(mResult[2]/80000,500);
+        mRangeSize = Math.min(mResult[2]/20000,500);
         mRangeMargin = mRangeSize/2;
         mLayoutParams.width = mRangeSize;
         mLayoutParams.height = mRangeSize;
+
+        mCurrentX = mBeaconX;
+        mCurrentY = mBeaconY;
     }
 
     private class accListener implements SensorEventListener{
@@ -588,6 +583,7 @@ public class MultipleUserActivity extends RECOActivity implements RECORangingLis
         try {
             mRecoManager.unbind();
         } catch (RemoteException e) {
+            Log.i("RECORangingActivity", "Remote Exception");
             e.printStackTrace();
         }
     }

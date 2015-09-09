@@ -3,14 +3,12 @@ package com.example.hyeonseob.beacontriangulation.Intro;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
 import com.example.hyeonseob.beacontriangulation.Activity.BeaconTestActivity;
 import com.example.hyeonseob.beacontriangulation.Activity.ConfigurationActivity;
-import com.example.hyeonseob.beacontriangulation.Activity.MultipleUserActivity;
 import com.example.hyeonseob.beacontriangulation.Class.DeviceManager;
 import com.example.hyeonseob.beacontriangulation.R;
 
@@ -31,7 +29,6 @@ public class MainActivity extends Activity {
     }
 
     public void onButtonClicked(View v) {
-        Log.i("button","button clicked!");
         Button btn = (Button)v;
         if(btn.getId() == R.id.startNavigatingButton) {
             final Intent intent = new Intent(this, BluetoothActivity.class);
@@ -40,7 +37,7 @@ public class MainActivity extends Activity {
             final Intent intent = new Intent(this, ConfigurationActivity.class);
             startActivity(intent);
         } else if(btn.getId() == R.id.multipleUserButton){
-            final Intent intent = new Intent(this, MultipleUserActivity.class);
+            final Intent intent = new Intent(this, BluetoothActivity2.class);
             startActivity(intent);
         } else if(btn.getId() == R.id.beaconTestButton){
             final Intent intent = new Intent(this, BeaconTestActivity.class);

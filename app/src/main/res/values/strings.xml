@@ -35,4 +35,8 @@
     <string name="title_activity_bluetooth">BluetoothActivity</string>
     <string name="title_activity_multiple_user">MultipleUserActivity</string>
     <string name="title_activity_beacon_test">BeaconTestActivity</string>
+    <string name="title_activity_bluetooth2">BluetoothActivity2</string>
+    <string name="title_activity_rotate2">RotateActivity2</string>
+    <string name="title_activity_hold2">HoldActivity2</string>
+    <string name="title_activity_starting2">StartingActivity2</string>
 </resources>

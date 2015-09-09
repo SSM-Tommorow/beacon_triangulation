@@ -21,60 +21,12 @@
         android:padding="3dp"
         android:id="@+id/statusLayout">
         <Button
-            android:layout_width="match_parent"
+            android:layout_width="180dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="5dp"
             android:text="START"
             android:onClick="onButtonClicked"
             android:id="@+id/button" />
-        <LinearLayout
-            android:orientation="horizontal"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content">
-            <ImageView
-                android:layout_gravity="center"
-                android:layout_width="15dp"
-                android:layout_height="15dp"
-                android:src="@drawable/icon_location"/>
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="#FFFFFF"
-                android:text=":B-Map,  "/>
-            <ImageView
-                android:layout_gravity="center"
-                android:layout_width="13dp"
-                android:layout_height="13dp"
-                android:src="@drawable/blue_button"/>
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="#FFFFFF"
-                android:text=":비콘만,  "/>
-            <ImageView
-                android:layout_gravity="center"
-                android:layout_width="13dp"
-                android:layout_height="13dp"
-                android:src="@drawable/red_button"/>
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="#FFFFFF"
-                android:text=":센서만"/>
-        </LinearLayout>
-
-        <TextView
-            android:textColor="#FFFFFF"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Status:"
-            android:id="@+id/statusTextView" />
-        <TextView
-            android:textColor="#FFFFFF"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text=""
-            android:id="@+id/RSSITextView" />
     </LinearLayout>
 
     <LinearLayout
@@ -89,18 +41,52 @@
         android:layout_alignParentStart="true"
         android:layout_alignParentBottom="true">
 
-        <TextView
-            android:textColor="#FFFFFF"
+        <LinearLayout
+            android:orientation="horizontal"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="2m : "/>
+            android:gravity="center">
+            <ImageView
+                android:layout_gravity="center"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/icon_location"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#FFFFFF"
+                android:textSize="20sp"
+                android:text=":B-Map,    "/>
+            <ImageView
+                android:layout_gravity="center"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/blue_button"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#FFFFFF"
+                android:textSize="20sp"
+                android:text=":비콘만,    "/>
+            <ImageView
+                android:layout_gravity="center"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/red_button"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#FFFFFF"
+                android:textSize="20sp"
+                android:text=":센서만 "/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/statusTextView"
+                android:text="status:"
+                android:textColor="#FFFFFF"/>
 
-        <ImageView
-            android:layout_width="50dp"
-            android:layout_height="5dp"
-            android:id="@+id/ratioBar"
-            android:background="#ffffff"
-            android:layout_gravity="center" />
+        </LinearLayout>
     </LinearLayout>
 
     <RelativeLayout
