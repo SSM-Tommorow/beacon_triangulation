@@ -235,7 +235,6 @@ public class NavigationActivity extends RECOActivity implements RECORangingListe
 
         mLocEst = new LocationEstimation(mDeviceManager.getDeviceNum());
         mLocEst.setFingerprint(mFingerprint);
-        mLocEst.setContext(this);
     }
 
 

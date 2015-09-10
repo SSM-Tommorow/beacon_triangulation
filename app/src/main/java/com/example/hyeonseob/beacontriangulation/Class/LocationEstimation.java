@@ -55,7 +55,6 @@ public class LocationEstimation {
     private double[] mRSSIAvg;
     private int[] mResult;
     private int mDeviceNum;
-    private Context mContext;
 
     private double sum, min, mActualMin;
     private int count, minloc, mActualMinLoc, i, j, temp;
@@ -67,18 +66,11 @@ public class LocationEstimation {
         mMeasureCount = mDirection = 0;
         mRSSIAvg = new double[15];
         mResult = new int[3];
-        mContext = null;
-
     }
 
     public void setFingerprint(int[][][] fingerprint) {
         mFingerprint = fingerprint;
     }
-
-    public void setContext(Context context){
-        mContext = context;
-    }
-
     public int[] getLocation(Vector<Beacon> beaconList, int direction) {
         if(direction <= 45)
             mDirection = 3;
